@@ -3,7 +3,8 @@ import { Order } from '../models/Order';
 import { AppError } from '../errors/AppError';
 import logger from '../utils/logger';
 
-export const orderRepo = AppDataSource.getRepository(Order);
+// Always use the singleton AppDataSource instance
+const orderRepo = AppDataSource.getRepository(Order);
 
 export const createOrder = async (data: Partial<Order>): Promise<Order> => {
   try {

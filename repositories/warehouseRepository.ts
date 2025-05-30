@@ -3,7 +3,8 @@ import { Warehouse } from '../models/Warehouse';
 import { AppError } from '../errors/AppError';
 import logger from '../utils/logger';
 
-export const warehouseRepo = AppDataSource.getRepository(Warehouse);
+// Always use the singleton AppDataSource instance
+const warehouseRepo = AppDataSource.getRepository(Warehouse);
 
 export const createWarehouse = async (data: Partial<Warehouse>): Promise<Warehouse> => {
   try {
