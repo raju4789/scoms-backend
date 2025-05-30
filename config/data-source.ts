@@ -1,6 +1,8 @@
 import 'reflect-metadata';
 import { DataSource } from 'typeorm';
 import dotenv from 'dotenv';
+import { Warehouse } from '../models/Warehouse';
+import { Order } from '../models/Order';
 
 dotenv.config();
 
@@ -13,7 +15,7 @@ export const AppDataSource = new DataSource({
   database: process.env.DB_NAME,
   synchronize: false, // set to true only for development
   logging: true,
-  entities: [], // Add entity files here
+  entities: [Warehouse, Order], // Add entity files here
   migrations: [],
   subscribers: [],
 });
