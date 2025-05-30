@@ -4,9 +4,5 @@ module.exports = {
   roots: ['<rootDir>/repositories', '<rootDir>/services', '<rootDir>/utils'], // Added utils
   moduleFileExtensions: ['ts', 'js', 'json'],
   testMatch: ['**/*.test.ts'],
-  globals: {
-    'ts-jest': {
-      isolatedModules: true,
-    },
-  },
+  setupFiles: ['<rootDir>/jest.setup.js'], // Add this line to mock logger globally
 };
