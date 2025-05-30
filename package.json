@@ -11,8 +11,13 @@
   "license": "ISC",
   "dependencies": {
     "@types/node": "^22.15.26",
+    "@types/pg": "^8.15.2",
+    "dotenv": "^16.5.0",
     "express": "^5.1.0",
+    "pg": "^8.16.0",
+    "reflect-metadata": "^0.2.2",
     "ts-node": "^10.9.2",
+    "typeorm": "^0.3.24",
     "typescript": "^5.8.3"
   },
   "devDependencies": {
