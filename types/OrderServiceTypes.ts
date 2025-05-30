@@ -48,3 +48,23 @@ export interface AllocationAndShipping {
   totalShippingCost: number;
   isStockSufficient: boolean;
 }
+
+/**
+ * Input for creating a warehouse.
+ */
+export interface CreateWarehouseInput {
+  name: string;
+  latitude: number;
+  longitude: number;
+  stock: number;
+}
+
+/**
+ * Input for updating a warehouse.
+ */
+export interface UpdateWarehouseInput {
+  name?: string;
+  latitude?: number;
+  longitude?: number;
+  stock?: number;
+}
