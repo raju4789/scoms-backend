@@ -1,6 +1,7 @@
 import express from 'express';
 import dotenv from 'dotenv';
 import { Client } from 'pg';
+import logger from '../utils/logger';
 
 dotenv.config();
 
@@ -16,13 +17,13 @@ const dbClient = new Client({
 });
 
 dbClient.connect()
-  .then(() => console.log('Connected to PostgreSQL'))
-  .catch((err: Error) => console.error('PostgreSQL connection error:', err));
+  .then(() => logger.info('Connected to PostgreSQL'))
+  .catch((err: Error) => logger.error({ err }, 'PostgreSQL connection error'));
 
 app.get('/health', (req, res) => {
   res.status(200).send('OK');
 });
 
 app.listen(port, () => {
-  console.log(`Server is running on http://localhost:${port}`);
+  logger.info(`Server is running on http://localhost:${port}`);
 });
