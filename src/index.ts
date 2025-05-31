@@ -6,6 +6,7 @@ import { AppDataSource } from './config/data-source';
 import { runInitialDataLoad } from './utils/dbBootstrap';
 import { errorHandler, setupGlobalErrorHandlers } from './middleware/errorHandler';
 import { correlationIdMiddleware } from './middleware/correlationId';
+import { requestLogger } from './middleware/requestLogger';
 import healthRoutes from './routes/healthRoutes';
 
 dotenv.config();
@@ -22,6 +23,9 @@ app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
 // Add correlation ID to all requests
 app.use(correlationIdMiddleware);
+
+// Add HTTP request/response logging
+app.use(requestLogger);
 
 // Add security headers
 app.use((req, res, next) => {

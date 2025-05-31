@@ -1,7 +1,7 @@
 import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
-import { AppError, ValidationError, BusinessLogicError, NotFoundError, ErrorCategory } from '../errors/ErrorTypes';
+import { BusinessLogicError} from '../errors/ErrorTypes';
 import { haversineDistanceKm, getDiscountRate, runInTransaction } from '../utils/orderUtils';
 import { OrderInput, OrderVerificationResult, OrderSubmissionResult, Allocation, AllocationAndShipping } from '../types/OrderServiceTypes';
 import { Warehouse } from '../models/Warehouse';
