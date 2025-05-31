@@ -4,6 +4,7 @@ import { AppDataSource } from '../config/data-source';
 import { ErrorMetricsService } from '../services/errorMetricsService';
 import { successResponse } from '../types/CommonApiResponse';
 import { asyncHandler } from '../middleware/errorHandler';
+import logger from '../utils/logger';
 
 const router = Router();
 
@@ -47,7 +48,9 @@ router.get(
       if (databaseLatency > 1000) {
         databaseStatus = 'degraded';
       }
-    } catch (_error) {
+      // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    } catch (err) {
+      logger.error('Database connection failed', err);
       databaseStatus = 'unhealthy';
     }
 
@@ -109,7 +112,9 @@ router.get(
         status: 'ready',
         timestamp: new Date().toISOString(),
       });
-    } catch (_error) {
+    } catch (error) {
+      logger.error('Database readiness check failed', error);
+      // Error is not used but we need the catch block
       res.status(StatusCodes.SERVICE_UNAVAILABLE).json({
         status: 'not ready',
         timestamp: new Date().toISOString(),

@@ -28,7 +28,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
 
   // Override res.end to log response
   const originalEnd = res.end;
-  res.end = function (...args: Parameters<typeof originalEnd>) {
+  res.end = function (this: Response, ...args: Parameters<typeof originalEnd>) {
     const duration = Date.now() - startTime;
 
     // Log response
@@ -47,7 +47,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
 
     // Call original end method
     return originalEnd.apply(this, args);
-  };
+  } as typeof res.end;
 
   next();
 }

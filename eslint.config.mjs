@@ -94,9 +94,8 @@ export default [
       'node_modules/',
       'dist/',
       'coverage/',
-      '*.js',
-      '!eslint.config.js',
-      '!jest.config.js',
+      '*.config.js',
+      '*.setup.js',
     ],
   },
 ];

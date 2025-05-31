@@ -3,8 +3,9 @@ import tsParser from '@typescript-eslint/parser';
 import tsPlugin from '@typescript-eslint/eslint-plugin';
 import prettierPlugin from 'eslint-plugin-prettier';
 import prettierConfig from 'eslint-config-prettier';
+import { Linter } from 'eslint';
 
-export default [
+const config: Linter.FlatConfig[] = [
   js.configs.recommended,
   {
     files: ['**/*.{ts,js}'],
@@ -48,7 +49,6 @@ export default [
     rules: {
       ...tsPlugin.configs.recommended.rules,
       ...prettierConfig.rules,
-
       // TypeScript specific rules
       '@typescript-eslint/no-unused-vars': [
         'error',
@@ -100,3 +100,5 @@ export default [
     ],
   },
 ];
+
+export default config;
