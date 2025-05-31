@@ -1,5 +1,4 @@
-
-import { ErrorMetrics, ErrorCategory, ErrorSeverity } from '../errors/ErrorTypes';
+import { ErrorCategory, ErrorMetrics, ErrorSeverity } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 
 /**
@@ -23,13 +22,16 @@ export class ErrorMetricsService {
    * Record error metrics for monitoring and alerting
    */
   recordError(metrics: ErrorMetrics): void {
-    const { category, severity, statusCode, endpoint, correlationId } = metrics;
-    
+    const { category, severity, statusCode, endpoint, correlationId: _correlationId } = metrics;
+
     // Log structured error metrics
-    logger.info({
-      type: 'error_metrics',
-      ...metrics
-    }, 'Error metrics recorded');
+    logger.info(
+      {
+        type: 'error_metrics',
+        ...metrics,
+      },
+      'Error metrics recorded'
+    );
 
     // Track error counts by category
     const categoryKey = `${category}:${statusCode}`;
@@ -57,19 +59,25 @@ export class ErrorMetricsService {
     errorsByCategory: Record<string, number>;
     healthStatus: 'healthy' | 'degraded' | 'unhealthy';
   } {
-    const totalErrors = Array.from(this.errorCounts.values()).reduce((sum, count) => sum + count, 0);
+    const totalErrors = Array.from(this.errorCounts.values()).reduce(
+      (sum, count) => sum + count,
+      0
+    );
     const errorsByCategory: Record<string, number> = {};
-    
+
     this.errorCounts.forEach((count, key) => {
       errorsByCategory[key] = count;
     });
 
     // Determine health status based on error rates
     let healthStatus: 'healthy' | 'degraded' | 'unhealthy' = 'healthy';
-    
+
     const criticalErrors = errorsByCategory[`${ErrorCategory.SYSTEM}:500`] || 0;
     const highSeverityErrors = Object.entries(errorsByCategory)
-      .filter(([key]) => key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE))
+      .filter(
+        ([key]) =>
+          key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE)
+      )
       .reduce((sum, [, count]) => sum + count, 0);
 
     if (criticalErrors > 0) {
@@ -81,7 +89,7 @@ export class ErrorMetricsService {
     return {
       totalErrors,
       errorsByCategory,
-      healthStatus
+      healthStatus,
     };
   }
 
@@ -91,7 +99,7 @@ export class ErrorMetricsService {
   shouldCircuitBreak(endpoint: string): boolean {
     const now = Date.now();
     const rateData = this.errorRates.get(endpoint);
-    
+
     if (!rateData) return false;
 
     // Reset window if expired
@@ -126,24 +134,27 @@ export class ErrorMetricsService {
   private sendToMonitoring(metrics: ErrorMetrics): void {
     // Integration points for external monitoring services
     // Examples: DataDog, New Relic, Prometheus, etc.
-    
+
     // DataDog example (would require datadog client):
     // this.datadogClient?.increment('scoms.errors', 1, [`category:${metrics.category}`]);
-    
+
     // Custom webhook example:
     // this.sendWebhook('/monitoring/errors', metrics);
-    
+
     logger.debug({ metrics }, 'Error metrics would be sent to external monitoring');
   }
 
   private triggerCriticalAlert(metrics: ErrorMetrics): void {
     // Integration points for alerting systems
     // Examples: PagerDuty, Slack, email, etc.
-    
-    logger.error({
-      type: 'critical_alert',
-      ...metrics
-    }, 'CRITICAL ERROR ALERT triggered');
+
+    logger.error(
+      {
+        type: 'critical_alert',
+        ...metrics,
+      },
+      'CRITICAL ERROR ALERT triggered'
+    );
 
     // In production, this would trigger actual alerts:
     // - PagerDuty incident

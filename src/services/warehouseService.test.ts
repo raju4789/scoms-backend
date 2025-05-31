@@ -1,6 +1,6 @@
 import * as warehouseService from './warehouseService';
 import * as warehouseRepository from '../repositories/warehouseRepository';
-import { ValidationError, NotFoundError } from '../errors/ErrorTypes';
+import { NotFoundError, ValidationError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
 
@@ -25,11 +25,11 @@ describe('warehouseService', () => {
       expect(result).toEqual(mockWarehouse);
     });
     it('should throw if name is missing', async () => {
-      const input = { latitude: 10, longitude: 20, stock: 100 } as any;
+      const input = { latitude: 10, longitude: 20, stock: 100 } as unknown as CreateWarehouseInput;
       await expect(warehouseService.createWarehouse(input)).rejects.toThrow(ValidationError);
     });
     it('should throw if latitude/longitude are missing', async () => {
-      const input = { name: 'Main', stock: 100 } as any;
+      const input = { name: 'Main', stock: 100 } as unknown as CreateWarehouseInput;
       await expect(warehouseService.createWarehouse(input)).rejects.toThrow(ValidationError);
     });
     it('should throw if stock is negative', async () => {
@@ -70,14 +70,20 @@ describe('warehouseService', () => {
       expect(result).toEqual(mockWarehouse);
     });
     it('should throw if id is invalid', async () => {
-      await expect(warehouseService.updateWarehouse(0, { stock: 10 })).rejects.toThrow(ValidationError);
+      await expect(warehouseService.updateWarehouse(0, { stock: 10 })).rejects.toThrow(
+        ValidationError
+      );
     });
     it('should throw if stock is negative', async () => {
-      await expect(warehouseService.updateWarehouse(1, { stock: -5 })).rejects.toThrow(ValidationError);
+      await expect(warehouseService.updateWarehouse(1, { stock: -5 })).rejects.toThrow(
+        ValidationError
+      );
     });
     it('should throw if warehouse not found', async () => {
       (warehouseRepository.updateWarehouse as jest.Mock).mockResolvedValue(null);
-      await expect(warehouseService.updateWarehouse(1, { stock: 10 })).rejects.toThrow(NotFoundError);
+      await expect(warehouseService.updateWarehouse(1, { stock: 10 })).rejects.toThrow(
+        NotFoundError
+      );
     });
     it('should propagate repository errors', async () => {
       (warehouseRepository.updateWarehouse as jest.Mock).mockRejectedValue(new Error('fail'));

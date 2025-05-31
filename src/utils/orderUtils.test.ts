@@ -1,4 +1,4 @@
-import { haversineDistanceKm, getDiscountRate, runInTransaction } from './orderUtils';
+import { getDiscountRate, haversineDistanceKm, runInTransaction } from './orderUtils';
 import { AppDataSource } from '../config/data-source';
 
 describe('orderUtils', () => {
@@ -44,10 +44,11 @@ describe('orderUtils', () => {
     it('calls the provided function with a manager and returns its result', async () => {
       // Mock AppDataSource.transaction
       const mockManager = { id: 123 };
-      const spy = jest.spyOn(AppDataSource, 'transaction').mockImplementation(
-        async (fn: any) => fn(mockManager)
-      );
-      const fn = jest.fn(async (manager) => manager.id);
+      const spy = jest
+        .spyOn(AppDataSource, 'transaction')
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        .mockImplementation(async (fn: any) => fn(mockManager));
+      const fn = jest.fn(async manager => manager.id);
       const result = await runInTransaction(fn);
       expect(fn).toHaveBeenCalledWith(mockManager);
       expect(result).toBe(123);

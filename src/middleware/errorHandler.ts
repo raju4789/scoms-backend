@@ -1,16 +1,27 @@
-import { Request, Response, NextFunction } from 'express';
-import { 
-  AppError, 
+import { NextFunction, Request, Response } from 'express';
+import {
+  AppError,
+  ErrorCategory,
+  ErrorMetrics,
+  ErrorResponse,
+  ErrorSeverity,
   ValidationError,
-  ErrorResponse, 
-  ErrorMetrics, 
-  ErrorCategory, 
-  ErrorSeverity 
 } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 import { v4 as uuidv4 } from 'uuid';
 import { StatusCodes } from 'http-status-codes';
 import { ErrorMetricsService } from '../services/errorMetricsService';
+
+// Comprehensive error type that covers all possible error scenarios
+interface ExtendedError extends Error {
+  statusCode?: number;
+  code?: string;
+  errors?: unknown[];
+  details?: Record<string, unknown>;
+  isOperational?: boolean;
+  category?: ErrorCategory;
+  severity?: ErrorSeverity;
+}
 
 /**
  * Enhanced error handler middleware with industry best practices:
@@ -22,7 +33,7 @@ import { ErrorMetricsService } from '../services/errorMetricsService';
  * - Comprehensive logging with context
  */
 export function errorHandler(
-  err: any,
+  err: ExtendedError,
   req: Request,
   res: Response,
   next: NextFunction
@@ -51,7 +62,7 @@ export function errorHandler(
       errorId,
       correlationId,
       retryable: true,
-      helpUrl: '/docs/circuit-breaker'
+      helpUrl: '/docs/circuit-breaker',
     });
   }
 
@@ -63,7 +74,7 @@ export function errorHandler(
     isOperational: boolean;
     retryable: boolean;
     helpUrl?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   };
 
   // Enhanced error classification and handling
@@ -76,7 +87,7 @@ export function errorHandler(
       isOperational: err.isOperational,
       retryable: err.retryable,
       helpUrl: err.helpUrl,
-      details: err instanceof ValidationError ? err.details : undefined
+      details: err instanceof ValidationError ? err.details : undefined,
     };
   } else if (err.name === 'ValidationError' || (err.errors && Array.isArray(err.errors))) {
     errorDetails = {
@@ -86,7 +97,7 @@ export function errorHandler(
       message: 'Validation failed',
       isOperational: true,
       retryable: false,
-      details: err.errors || err.details
+      details: err.details || (err.errors ? { errors: err.errors } : undefined),
     };
   } else if (err.name === 'JsonWebTokenError' || err.name === 'TokenExpiredError') {
     errorDetails = {
@@ -96,7 +107,7 @@ export function errorHandler(
       message: 'Authentication failed',
       isOperational: true,
       retryable: false,
-      helpUrl: '/docs/authentication'
+      helpUrl: '/docs/authentication',
     };
   } else if (err.code === 'ECONNREFUSED' || err.code === 'ENOTFOUND' || err.code === 'ETIMEDOUT') {
     errorDetails = {
@@ -105,16 +116,17 @@ export function errorHandler(
       severity: ErrorSeverity.HIGH,
       message: 'Network connectivity issue',
       isOperational: true,
-      retryable: true
+      retryable: true,
     };
-  } else if (err.code?.startsWith('23') || err.name?.includes('Query')) { // PostgreSQL error codes
+  } else if (err.code?.startsWith('23') || err.name?.includes('Query')) {
+    // PostgreSQL error codes
     errorDetails = {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       category: ErrorCategory.DATABASE,
       severity: ErrorSeverity.HIGH,
       message: 'Database operation failed',
       isOperational: true,
-      retryable: true
+      retryable: true,
     };
   } else {
     // Unknown/system errors
@@ -124,7 +136,7 @@ export function errorHandler(
       severity: ErrorSeverity.CRITICAL,
       message: isProduction ? 'Internal server error' : err.message,
       isOperational: false,
-      retryable: false
+      retryable: false,
     };
   }
 
@@ -140,9 +152,9 @@ export function errorHandler(
     method: req.method,
     userAgent: req.get('user-agent'),
     ip: req.ip || req.connection.remoteAddress,
-    userId: (req as any).user?.id,
+    userId: (req as { user?: { id?: string } }).user?.id,
     requestBody: req.method !== 'GET' ? req.body : undefined,
-    ...(errorDetails.severity === ErrorSeverity.CRITICAL && { stack: err.stack })
+    ...(errorDetails.severity === ErrorSeverity.CRITICAL && { stack: err.stack }),
   };
 
   // Log based on severity
@@ -167,16 +179,16 @@ export function errorHandler(
     endpoint,
     method: req.method,
     userAgent: req.get('user-agent'),
-    ip: req.ip || req.connection.remoteAddress
+    ip: req.ip || req.connection.remoteAddress,
   };
-  
+
   metricsService.recordError(metrics);
 
   // Send structured error response
-  sendErrorResponse(res, {
+  return sendErrorResponse(res, {
     ...errorDetails,
     errorId,
-    correlationId
+    correlationId,
   });
 }
 
@@ -194,11 +206,11 @@ function sendErrorResponse(
     correlationId: string;
     retryable?: boolean;
     helpUrl?: string;
-    details?: any;
+    details?: Record<string, unknown>;
   }
 ): void {
   const isProduction = process.env.NODE_ENV === 'production';
-  
+
   const response: ErrorResponse = {
     isSuccess: false,
     data: null,
@@ -212,8 +224,8 @@ function sendErrorResponse(
       timestamp: new Date().toISOString(),
       retryable: errorInfo.retryable || false,
       ...(errorInfo.helpUrl && { helpUrl: errorInfo.helpUrl }),
-      ...(errorInfo.details && !isProduction && { details: errorInfo.details })
-    }
+      ...(errorInfo.details && !isProduction && { details: errorInfo.details }),
+    },
   };
 
   res.status(errorInfo.statusCode).json(response);
@@ -223,7 +235,7 @@ function sendErrorResponse(
  * Middleware to handle async route errors
  */
 export function asyncHandler(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<any>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -235,25 +247,31 @@ export function asyncHandler(
  */
 export function setupGlobalErrorHandlers(): void {
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error({
-      type: 'unhandled_rejection',
-      reason,
-      promise
-    }, 'Unhandled Promise Rejection');
-    
+    logger.error(
+      {
+        type: 'unhandled_rejection',
+        reason,
+        promise,
+      },
+      'Unhandled Promise Rejection'
+    );
+
     // Graceful shutdown in production
     if (process.env.NODE_ENV === 'production') {
       process.exit(1);
     }
   });
 
-  process.on('uncaughtException', (error) => {
-    logger.error({
-      type: 'uncaught_exception',
-      error,
-      stack: error.stack
-    }, 'Uncaught Exception');
-    
+  process.on('uncaughtException', error => {
+    logger.error(
+      {
+        type: 'uncaught_exception',
+        error,
+        stack: error.stack,
+      },
+      'Uncaught Exception'
+    );
+
     // Graceful shutdown
     process.exit(1);
   });

@@ -1,9 +1,13 @@
 import logger from '../utils/logger';
 import * as warehouseRepository from '../repositories/warehouseRepository';
-import { AppError, NotFoundError } from '../errors/ErrorTypes';
+import { NotFoundError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
-import { validateCreateWarehouseInput, validateWarehouseId, validateUpdateWarehouseInput } from '../utils/warehouseValidation';
+import {
+  validateCreateWarehouseInput,
+  validateUpdateWarehouseInput,
+  validateWarehouseId,
+} from '../utils/warehouseValidation';
 
 /**
  * Creates a new warehouse after validating input.
@@ -50,7 +54,10 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
  * @returns The updated Warehouse
  * @throws AppError if validation fails or warehouse not found
  */
-export const updateWarehouse = async (id: number, data: UpdateWarehouseInput): Promise<Warehouse> => {
+export const updateWarehouse = async (
+  id: number,
+  data: UpdateWarehouseInput
+): Promise<Warehouse> => {
   logger.info({ event: 'updateWarehouse', id, data }, 'Service: updateWarehouse called');
   validateWarehouseId(id);
   validateUpdateWarehouseInput(data);

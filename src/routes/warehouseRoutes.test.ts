@@ -5,6 +5,7 @@ import { errorHandler } from '../middleware/errorHandler';
 import { correlationIdMiddleware } from '../middleware/correlationId';
 
 jest.mock('../services/warehouseService');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const warehouseService = require('../services/warehouseService');
 
 describe('warehouseRoutes', () => {
@@ -46,9 +47,7 @@ describe('warehouseRoutes', () => {
 
   it('PUT /api/v1/warehouses/:id updates a warehouse', async () => {
     warehouseService.updateWarehouse.mockResolvedValue(mockWarehouse);
-    const res = await request(app)
-      .put('/api/v1/warehouses/1')
-      .send({ stock: 200 });
+    const res = await request(app).put('/api/v1/warehouses/1').send({ stock: 200 });
     expect(res.status).toBe(200);
     expect(res.body.data).toEqual(mockWarehouse);
   });

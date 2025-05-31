@@ -1,4 +1,3 @@
-
 import { StatusCodes } from 'http-status-codes';
 
 /**
@@ -6,9 +5,9 @@ import { StatusCodes } from 'http-status-codes';
  */
 export enum ErrorSeverity {
   LOW = 'low',
-  MEDIUM = 'medium', 
+  MEDIUM = 'medium',
   HIGH = 'high',
-  CRITICAL = 'critical'
+  CRITICAL = 'critical',
 }
 
 /**
@@ -24,7 +23,7 @@ export enum ErrorCategory {
   DATABASE = 'database',
   NETWORK = 'network',
   SYSTEM = 'system',
-  UNKNOWN = 'unknown'
+  UNKNOWN = 'unknown',
 }
 
 /**
@@ -36,7 +35,7 @@ export interface ErrorContext {
   tenantId?: string;
   operation?: string;
   resource?: string;
-  additionalData?: Record<string, any>;
+  additionalData?: Record<string, unknown>;
 }
 
 /**
@@ -53,7 +52,7 @@ export interface ErrorResponse {
     category: ErrorCategory;
     severity: ErrorSeverity;
     timestamp: string;
-    details?: any;
+    details?: Record<string, unknown>;
     retryable?: boolean;
     helpUrl?: string;
   };
@@ -102,7 +101,7 @@ export class AppError extends Error {
     } = {}
   ) {
     super(message);
-    
+
     this.name = this.constructor.name;
     this.statusCode = options.statusCode || StatusCodes.INTERNAL_SERVER_ERROR;
     this.category = options.category || ErrorCategory.UNKNOWN;
@@ -121,40 +120,33 @@ export class AppError extends Error {
  * Validation error for input validation failures
  */
 export class ValidationError extends AppError {
-  constructor(
-    message: string,
-    details?: any,
-    context?: ErrorContext
-  ) {
+  constructor(message: string, details?: Record<string, unknown>, context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.UNPROCESSABLE_ENTITY,
       category: ErrorCategory.VALIDATION,
       severity: ErrorSeverity.LOW,
       context,
-      retryable: false
+      retryable: false,
     });
-    
+
     this.details = details;
   }
 
-  public readonly details?: any;
+  public readonly details?: Record<string, unknown>;
 }
 
 /**
  * Authentication error for auth failures
  */
 export class AuthenticationError extends AppError {
-  constructor(
-    message: string = 'Authentication required',
-    context?: ErrorContext
-  ) {
+  constructor(message: string = 'Authentication required', context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.UNAUTHORIZED,
       category: ErrorCategory.AUTHENTICATION,
       severity: ErrorSeverity.MEDIUM,
       context,
       retryable: false,
-      helpUrl: '/docs/authentication'
+      helpUrl: '/docs/authentication',
     });
   }
 }
@@ -163,17 +155,14 @@ export class AuthenticationError extends AppError {
  * Authorization error for permission failures
  */
 export class AuthorizationError extends AppError {
-  constructor(
-    message: string = 'Insufficient permissions',
-    context?: ErrorContext
-  ) {
+  constructor(message: string = 'Insufficient permissions', context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.FORBIDDEN,
       category: ErrorCategory.AUTHORIZATION,
       severity: ErrorSeverity.MEDIUM,
       context,
       retryable: false,
-      helpUrl: '/docs/permissions'
+      helpUrl: '/docs/permissions',
     });
   }
 }
@@ -182,21 +171,17 @@ export class AuthorizationError extends AppError {
  * Not found error for missing resources
  */
 export class NotFoundError extends AppError {
-  constructor(
-    resource: string,
-    identifier?: string,
-    context?: ErrorContext
-  ) {
-    const message = identifier 
+  constructor(resource: string, identifier?: string, context?: ErrorContext) {
+    const message = identifier
       ? `${resource} with identifier '${identifier}' not found`
       : `${resource} not found`;
-      
+
     super(message, {
       statusCode: StatusCodes.NOT_FOUND,
       category: ErrorCategory.NOT_FOUND,
       severity: ErrorSeverity.LOW,
       context,
-      retryable: false
+      retryable: false,
     });
   }
 }
@@ -205,16 +190,13 @@ export class NotFoundError extends AppError {
  * Business logic error for domain rule violations
  */
 export class BusinessLogicError extends AppError {
-  constructor(
-    message: string,
-    context?: ErrorContext
-  ) {
+  constructor(message: string, context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.BAD_REQUEST,
       category: ErrorCategory.BUSINESS_LOGIC,
       severity: ErrorSeverity.MEDIUM,
       context,
-      retryable: false
+      retryable: false,
     });
   }
 }
@@ -223,18 +205,14 @@ export class BusinessLogicError extends AppError {
  * External service error for third-party API failures
  */
 export class ExternalServiceError extends AppError {
-  constructor(
-    serviceName: string,
-    originalError?: Error,
-    context?: ErrorContext
-  ) {
+  constructor(serviceName: string, originalError?: Error, context?: ErrorContext) {
     super(`External service '${serviceName}' is unavailable`, {
       statusCode: StatusCodes.BAD_GATEWAY,
       category: ErrorCategory.EXTERNAL_SERVICE,
       severity: ErrorSeverity.HIGH,
       context,
       retryable: true,
-      cause: originalError
+      cause: originalError,
     });
   }
 }
@@ -243,18 +221,14 @@ export class ExternalServiceError extends AppError {
  * Database error for data layer failures
  */
 export class DatabaseError extends AppError {
-  constructor(
-    operation: string,
-    originalError?: Error,
-    context?: ErrorContext
-  ) {
+  constructor(operation: string, originalError?: Error, context?: ErrorContext) {
     super(`Database operation '${operation}' failed`, {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       category: ErrorCategory.DATABASE,
       severity: ErrorSeverity.HIGH,
       context,
       retryable: true,
-      cause: originalError
+      cause: originalError,
     });
   }
 }
@@ -263,18 +237,14 @@ export class DatabaseError extends AppError {
  * Network error for connectivity issues
  */
 export class NetworkError extends AppError {
-  constructor(
-    message: string,
-    originalError?: Error,
-    context?: ErrorContext
-  ) {
+  constructor(message: string, originalError?: Error, context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.SERVICE_UNAVAILABLE,
       category: ErrorCategory.NETWORK,
       severity: ErrorSeverity.HIGH,
       context,
       retryable: true,
-      cause: originalError
+      cause: originalError,
     });
   }
 }
@@ -283,18 +253,14 @@ export class NetworkError extends AppError {
  * System error for infrastructure failures
  */
 export class SystemError extends AppError {
-  constructor(
-    message: string,
-    originalError?: Error,
-    context?: ErrorContext
-  ) {
+  constructor(message: string, originalError?: Error, context?: ErrorContext) {
     super(message, {
       statusCode: StatusCodes.INTERNAL_SERVER_ERROR,
       category: ErrorCategory.SYSTEM,
       severity: ErrorSeverity.CRITICAL,
       context,
       retryable: false,
-      cause: originalError
+      cause: originalError,
     });
   }
 }

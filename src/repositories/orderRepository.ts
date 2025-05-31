@@ -1,6 +1,6 @@
 import { AppDataSource } from '../config/data-source';
 import { Order } from '../models/Order';
-import { AppError, DatabaseError } from '../errors/ErrorTypes';
+import { DatabaseError } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 
 const orderRepo = AppDataSource.getRepository(Order);
@@ -13,8 +13,18 @@ export const createOrder = async (data: Partial<Order>): Promise<Order> => {
     logger.info({ event: 'createOrder', orderId: savedOrder.id }, 'Order created successfully');
     return savedOrder;
   } catch (error: unknown) {
-    logger.error({ event: 'createOrder', error: error instanceof Error ? error.message : error, orderData: data }, 'Failed to create order');
-    throw new DatabaseError('createOrder', error instanceof Error ? error : new Error('Unknown error'));
+    logger.error(
+      {
+        event: 'createOrder',
+        error: error instanceof Error ? error.message : error,
+        orderData: data,
+      },
+      'Failed to create order'
+    );
+    throw new DatabaseError(
+      'createOrder',
+      error instanceof Error ? error : new Error('Unknown error')
+    );
   }
 };
 
@@ -25,8 +35,14 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
     logger.info({ event: 'getOrderById', orderId: id, found: !!order }, 'Order fetch result');
     return order;
   } catch (error: unknown) {
-    logger.error({ event: 'getOrderById', error: error instanceof Error ? error.message : error, orderId: id }, 'Failed to fetch order by id');
-    throw new DatabaseError('getOrderById', error instanceof Error ? error : new Error('Unknown error'));
+    logger.error(
+      { event: 'getOrderById', error: error instanceof Error ? error.message : error, orderId: id },
+      'Failed to fetch order by id'
+    );
+    throw new DatabaseError(
+      'getOrderById',
+      error instanceof Error ? error : new Error('Unknown error')
+    );
   }
 };
 
@@ -37,7 +53,13 @@ export const getOrders = async (): Promise<Order[]> => {
     logger.info({ event: 'getOrders', count: orders.length }, 'Fetched orders');
     return orders;
   } catch (error: unknown) {
-    logger.error({ event: 'getOrders', error: error instanceof Error ? error.message : error }, 'Failed to fetch orders');
-    throw new DatabaseError('getOrders', error instanceof Error ? error : new Error('Unknown error'));
+    logger.error(
+      { event: 'getOrders', error: error instanceof Error ? error.message : error },
+      'Failed to fetch orders'
+    );
+    throw new DatabaseError(
+      'getOrders',
+      error instanceof Error ? error : new Error('Unknown error')
+    );
   }
 };

@@ -43,7 +43,10 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
   }
 };
 
-export const updateWarehouse = async (id: number, data: Partial<Warehouse>): Promise<Warehouse | null> => {
+export const updateWarehouse = async (
+  id: number,
+  data: Partial<Warehouse>
+): Promise<Warehouse | null> => {
   try {
     logger.info({ id, data }, 'Updating warehouse');
     await warehouseRepo.update(id, data);

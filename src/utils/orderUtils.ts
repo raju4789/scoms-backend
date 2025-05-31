@@ -23,13 +23,17 @@ export const haversineDistanceKm = (
   latitude2: number,
   longitude2: number
 ): number => {
-  const toRadians: (degrees: number) => number = (degrees) => degrees * DEG_TO_RAD;
+  const toRadians: (degrees: number) => number = degrees => degrees * DEG_TO_RAD;
   const deltaLat: number = toRadians(latitude2 - latitude1);
   const deltaLon: number = toRadians(longitude2 - longitude1);
   const haversineFormulaComponent: number =
     Math.sin(deltaLat / HAVERSINE_DIVISOR) ** HAVERSINE_EXPONENT +
-    Math.cos(toRadians(latitude1)) * Math.cos(toRadians(latitude2)) * Math.sin(deltaLon / HAVERSINE_DIVISOR) ** HAVERSINE_EXPONENT;
-  const centralAngle: number = HAVERSINE_FACTOR * Math.atan2(Math.sqrt(haversineFormulaComponent), Math.sqrt(1 - haversineFormulaComponent));
+    Math.cos(toRadians(latitude1)) *
+      Math.cos(toRadians(latitude2)) *
+      Math.sin(deltaLon / HAVERSINE_DIVISOR) ** HAVERSINE_EXPONENT;
+  const centralAngle: number =
+    HAVERSINE_FACTOR *
+    Math.atan2(Math.sqrt(haversineFormulaComponent), Math.sqrt(1 - haversineFormulaComponent));
   return EARTH_RADIUS_KM * centralAngle;
 };
 
@@ -58,6 +62,8 @@ export const getDiscountRate = (quantity: number): number => {
  * Runs the given function in a TypeORM transaction and returns its result.
  * Abstracts transaction management out of the service layer.
  */
-export async function runInTransaction<T>(fn: (manager: import('typeorm').EntityManager) => Promise<T>): Promise<T> {
+export async function runInTransaction<T>(
+  fn: (manager: import('typeorm').EntityManager) => Promise<T>
+): Promise<T> {
   return AppDataSource.transaction(fn);
 }

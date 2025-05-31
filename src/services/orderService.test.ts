@@ -111,7 +111,11 @@ describe('orderService.verifyOrder - business logic edge cases', () => {
 
   it('should round shipping cost to two decimals', async () => {
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue(mockWarehouses);
-    const input: OrderInput = { quantity: 2, shipping_latitude: 10.12345, shipping_longitude: 20.54321 };
+    const input: OrderInput = {
+      quantity: 2,
+      shipping_latitude: 10.12345,
+      shipping_longitude: 20.54321,
+    };
     const result = await orderService.verifyOrder(input);
     expect(Number(result.shippingCost.toFixed(2))).toBe(result.shippingCost);
   });
@@ -133,7 +137,14 @@ describe('orderService.submitOrder', () => {
   afterEach(() => jest.clearAllMocks());
 
   beforeEach(() => {
-    jest.spyOn(orderUtils, 'runInTransaction').mockImplementation(async (cb: any) => cb({ getRepository: () => ({ update: jest.fn(), save: jest.fn() }) }));
+    jest
+      .spyOn(orderUtils, 'runInTransaction')
+      .mockImplementation(
+        async (cb: (manager: import('typeorm').EntityManager) => Promise<unknown>) =>
+          cb({
+            getRepository: () => ({ update: jest.fn(), save: jest.fn() }),
+          } as unknown as import('typeorm').EntityManager)
+      );
   });
 
   it('should throw BusinessLogicError if verifyOrder fails', async () => {
@@ -144,8 +155,9 @@ describe('orderService.submitOrder', () => {
       shippingCost: 0,
       reason: 'Invalid',
     });
-    await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(BusinessLogicError);
+    await expect(
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
+    ).rejects.toThrow(BusinessLogicError);
   });
 
   it('should throw BusinessLogicError if no warehouses in transaction', async () => {
@@ -156,8 +168,9 @@ describe('orderService.submitOrder', () => {
       shippingCost: 10,
     });
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([]);
-    await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(BusinessLogicError);
+    await expect(
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
+    ).rejects.toThrow(BusinessLogicError);
   });
 
   it('should throw AppError if stock is insufficient during transaction', async () => {
@@ -173,8 +186,9 @@ describe('orderService.submitOrder', () => {
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([
       { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1 },
     ]);
-    await expect(orderService.submitOrder({ quantity: 5, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(AppError);
+    await expect(
+      orderService.submitOrder({ quantity: 5, shipping_latitude: 10, shipping_longitude: 20 })
+    ).rejects.toThrow(AppError);
   });
 
   it('should throw if allocation changes and stock is insufficient during transaction', async () => {
@@ -191,8 +205,9 @@ describe('orderService.submitOrder', () => {
       { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 0 },
       { id: 'w2', name: 'WH2', latitude: 15, longitude: 25, stock: 0 },
     ]);
-    await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(AppError);
+    await expect(
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
+    ).rejects.toThrow(AppError);
   });
 
   it('should throw if warehouse stock is just enough but another transaction depletes it', async () => {
@@ -208,8 +223,8 @@ describe('orderService.submitOrder', () => {
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([
       { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1 },
     ]);
-    await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(AppError);
+    await expect(
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
+    ).rejects.toThrow(AppError);
   });
-
 });

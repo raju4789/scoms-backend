@@ -1,5 +1,5 @@
 import * as orderRepository from './orderRepository';
-import { Order, WarehouseAllocation } from '../models/Order';
+import { Order } from '../models/Order';
 import { DatabaseError } from '../errors/ErrorTypes';
 import { AppDataSource } from '../config/data-source';
 
@@ -27,35 +27,41 @@ describe('orderRepository (unit, with mocks)', () => {
   });
 
   it('should create an order successfully', async () => {
-    (orderRepo.create as any) = jest.fn((d: Partial<Order>) => ({ ...validOrder, ...d }));
-    (orderRepo.save as any) = jest.fn(async (order: Order) => order);
+    (orderRepo.create as jest.Mock) = jest.fn((d: Partial<Order>) => ({ ...validOrder, ...d }));
+    (orderRepo.save as jest.Mock) = jest.fn(async (order: Order) => order);
     const data = { id: 'exists', quantity: 1 } as Partial<Order>;
     await expect(orderRepository.createOrder(data)).resolves.toEqual({ ...validOrder, ...data });
   });
 
   it('should throw DatabaseError when createOrder throws', async () => {
-    (orderRepo.create as any) = jest.fn((d: Partial<Order>) => ({ ...validOrder, ...d }));
-    (orderRepo.save as any) = jest.fn(() => { throw new Error('fail'); });
+    (orderRepo.create as jest.Mock) = jest.fn((d: Partial<Order>) => ({ ...validOrder, ...d }));
+    (orderRepo.save as jest.Mock) = jest.fn(() => {
+      throw new Error('fail');
+    });
     await expect(orderRepository.createOrder({} as Partial<Order>)).rejects.toThrow(DatabaseError);
   });
 
   it('should get order by id if exists', async () => {
-    (orderRepo.findOneBy as any) = jest.fn(async (where: Partial<Order>) => (where.id === 'exists' ? validOrder : null));
+    (orderRepo.findOneBy as jest.Mock) = jest.fn(async (where: Partial<Order>) =>
+      where.id === 'exists' ? validOrder : null
+    );
     await expect(orderRepository.getOrderById('exists')).resolves.toEqual(validOrder);
   });
 
   it('should return null if order by id does not exist', async () => {
-    (orderRepo.findOneBy as any) = jest.fn(async (where: Partial<Order>) => null);
+    (orderRepo.findOneBy as jest.Mock) = jest.fn(async (_where: Partial<Order>) => null);
     await expect(orderRepository.getOrderById('notfound')).resolves.toBeNull();
   });
 
   it('should get orders (empty array)', async () => {
-    (orderRepo.find as any) = jest.fn(async () => []);
+    (orderRepo.find as jest.Mock) = jest.fn(async () => []);
     await expect(orderRepository.getOrders()).resolves.toEqual([]);
   });
 
   it('should throw DatabaseError when getOrders throws', async () => {
-    (orderRepo.find as any) = jest.fn(() => { throw new Error('fail'); });
+    (orderRepo.find as jest.Mock) = jest.fn(() => {
+      throw new Error('fail');
+    });
     await expect(orderRepository.getOrders()).rejects.toThrow(DatabaseError);
   });
 });

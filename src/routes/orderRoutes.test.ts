@@ -5,6 +5,7 @@ import { errorHandler } from '../middleware/errorHandler';
 import { correlationIdMiddleware } from '../middleware/correlationId';
 
 jest.mock('../services/orderService');
+// eslint-disable-next-line @typescript-eslint/no-require-imports
 const orderService = require('../services/orderService');
 
 describe('orderRoutes', () => {
@@ -46,7 +47,12 @@ describe('orderRoutes', () => {
   });
 
   it('POST /api/v1/orders/verify validates an order', async () => {
-    orderService.verifyOrder.mockResolvedValue({ isValid: true, totalPrice: 100, discount: 0, shippingCost: 10 });
+    orderService.verifyOrder.mockResolvedValue({
+      isValid: true,
+      totalPrice: 100,
+      discount: 0,
+      shippingCost: 10,
+    });
     const res = await request(app)
       .post('/api/v1/orders/verify')
       .send({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 });
@@ -55,7 +61,13 @@ describe('orderRoutes', () => {
   });
 
   it('POST /api/v1/orders/submit submits an order', async () => {
-    orderService.submitOrder.mockResolvedValue({ id: 'abc', quantity: 1, total_price: 100, discount: 0, shipping_cost: 10 });
+    orderService.submitOrder.mockResolvedValue({
+      id: 'abc',
+      quantity: 1,
+      total_price: 100,
+      discount: 0,
+      shipping_cost: 10,
+    });
     const res = await request(app)
       .post('/api/v1/orders/submit')
       .send({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 });
@@ -64,7 +76,13 @@ describe('orderRoutes', () => {
   });
 
   it('POST /api/v1/orders submits an order', async () => {
-    orderService.submitOrder.mockResolvedValue({ id: 'abc', quantity: 1, total_price: 100, discount: 0, shipping_cost: 10 });
+    orderService.submitOrder.mockResolvedValue({
+      id: 'abc',
+      quantity: 1,
+      total_price: 100,
+      discount: 0,
+      shipping_cost: 10,
+    });
     const res = await request(app)
       .post('/api/v1/orders')
       .send({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 });

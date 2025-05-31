@@ -58,8 +58,8 @@ async function startServer() {
           errorCode: 404,
           errorMessage: `Route ${req.method} ${req.originalUrl} not found`,
           correlationId: req.correlationId,
-          timestamp: new Date().toISOString()
-        }
+          timestamp: new Date().toISOString(),
+        },
       });
     });
 
@@ -75,8 +75,8 @@ async function startServer() {
     // Graceful shutdown handling
     const gracefulShutdown = (signal: string) => {
       logger.info(`${signal} received, starting graceful shutdown...`);
-      
-      server.close(async (err) => {
+
+      server.close(async err => {
         if (err) {
           logger.error({ err }, 'Error during server shutdown');
           process.exit(1);
@@ -102,7 +102,6 @@ async function startServer() {
 
     process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
     process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-
   } catch (err) {
     logger.error({ err }, 'Failed to start server');
     process.exit(1);

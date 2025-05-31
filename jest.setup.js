@@ -8,7 +8,14 @@ jest.mock('./src/utils/logger', () => ({
     debug: jest.fn(),
     fatal: jest.fn(),
     trace: jest.fn(),
-    child: () => ({ info: jest.fn(), warn: jest.fn(), error: jest.fn(), debug: jest.fn(), fatal: jest.fn(), trace: jest.fn() }),
+    child: () => ({
+      info: jest.fn(),
+      warn: jest.fn(),
+      error: jest.fn(),
+      debug: jest.fn(),
+      fatal: jest.fn(),
+      trace: jest.fn(),
+    }),
     level: 'silent',
   },
 }));
