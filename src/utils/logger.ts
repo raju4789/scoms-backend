@@ -1,24 +1,27 @@
 import pino from 'pino';
 
 /**
- * Loki-optimized logger configuration
+ * SCOMS Backend Logger Configuration
  *
- * Key principles for Grafana Loki:
- * 1. Minimal labels (service, env, level) to avoid high cardinality
- * 2. Structured JSON logs with consistent field naming
- * 3. ISO timestamps for proper time-based queries
+ * Features:
+ * - Colored output in development for better readability
+ * - Structured JSON logs in production for log aggregation (Loki/ELK)
+ * - Comprehensive serializers for errors, requests, and responses
+ * - Minimal labels to avoid high cardinality in log systems
  *
- * Environment variables for configuration:
- * - LOG_LEVEL: Log level (debug, info, warn, error)
- * - NODE_ENV: Environment (development, production)
+ * Environment variables:
+ * - LOG_LEVEL: trace|debug|info|warn|error|fatal (default: info)
+ * - NODE_ENV: development|production|test
  * - HOSTNAME/POD_NAME: Instance identifier for distributed systems
- * - LOKI_ENDPOINT: Optional Loki push endpoint (e.g., http://loki:3100/loki/api/v1/push)
  */
 
-const logger = pino({
-  level: process.env.LOG_LEVEL || 'info',
+const isDevelopment = process.env.NODE_ENV === 'development';
+const logLevel = process.env.LOG_LEVEL || 'info';
 
-  // Base fields become Loki labels - keep minimal for performance
+const logger = pino({
+  level: logLevel,
+
+  // Minimal base fields for efficient log indexing
   base: {
     service: 'scoms-backend',
     env: process.env.NODE_ENV || 'development',
@@ -26,21 +29,27 @@ const logger = pino({
     instance: process.env.HOSTNAME || process.env.POD_NAME || 'local',
   },
 
-  // ISO timestamp format for Loki compatibility
+  // ISO timestamp for proper time-based queries
   timestamp: pino.stdTimeFunctions.isoTime,
 
   // Enhanced serializers for better log structure
   serializers: {
-    err: (err: Error & { code?: string; statusCode?: number; correlationId?: string }) => {
-      return {
-        type: err.constructor.name,
-        message: err.message,
-        stack: err.stack,
-        code: err.code,
-        statusCode: err.statusCode,
-        correlationId: err.correlationId,
-      };
-    },
+    err: (
+      err: Error & {
+        code?: string;
+        statusCode?: number;
+        correlationId?: string;
+        stack?: string;
+      }
+    ) => ({
+      type: err.constructor.name,
+      message: err.message,
+      stack: err.stack,
+      code: err.code,
+      statusCode: err.statusCode,
+      correlationId: err.correlationId,
+    }),
+
     req: (req: {
       method?: string;
       url?: string;
@@ -48,56 +57,52 @@ const logger = pino({
       ip?: string;
       correlationId?: string;
       connection?: { remoteAddress?: string };
-    }) => {
-      return {
-        method: req.method,
-        url: req.url,
-        headers: {
-          'user-agent': req.headers?.['user-agent'],
-          'content-type': req.headers?.['content-type'],
-        },
-        correlationId: req.correlationId,
-        ip: req.ip || req.connection?.remoteAddress,
-      };
-    },
-    res: (res: {
-      statusCode?: number;
-      getHeader?: (name: string) => unknown;
-      contentLength?: number;
-    }) => {
-      return {
-        statusCode: res.statusCode,
-        contentType: res.getHeader?.('content-type'),
-      };
-    },
+    }) => ({
+      method: req.method,
+      url: req.url,
+      userAgent: req.headers?.['user-agent'],
+      contentType: req.headers?.['content-type'],
+      correlationId: req.correlationId,
+      ip: req.ip || req.connection?.remoteAddress,
+    }),
+
+    res: (res: { statusCode?: number; getHeader?: (name: string) => unknown }) => ({
+      statusCode: res.statusCode,
+      contentType: res.getHeader?.('content-type'),
+    }),
   },
 
   formatters: {
-    // Ensure level is always a string for Loki labels
-    level(label) {
-      return { level: label };
-    },
-    // Add consistent fields to every log entry
-    log(obj: Record<string, unknown>) {
-      return {
-        ...obj,
-        '@timestamp': new Date().toISOString(),
-      };
-    },
+    level: (label: string) => ({ level: label }),
+    log: (obj: Record<string, unknown>) => ({
+      ...obj,
+      '@timestamp': new Date().toISOString(),
+    }),
   },
 
-  // Pretty print in development, JSON in production
-  transport:
-    process.env.NODE_ENV === 'development'
-      ? {
-          target: 'pino-pretty',
-          options: {
-            colorize: true,
-            translateTime: 'yyyy-mm-dd HH:MM:ss',
-            ignore: 'pid,hostname,service,env,version,instance',
+  // Pretty colored output in development, JSON in production
+  transport: isDevelopment
+    ? {
+        target: 'pino-pretty',
+        options: {
+          colorize: true,
+          colorizeObjects: true,
+          levelFirst: true,
+          translateTime: 'yyyy-mm-dd HH:MM:ss',
+          ignore: 'pid,hostname,service,env,version,instance',
+          messageFormat: (log: Record<string, unknown>, messageKey: string, levelLabel: string) => {
+            const timestamp = new Date(log.time as string)
+              .toISOString()
+              .slice(0, 19)
+              .replace('T', ' ');
+            const level = levelLabel.toUpperCase().padEnd(5);
+            const message = (log[messageKey] as string) || '';
+            return `${level} [${timestamp}]: ${message}`;
           },
-        }
-      : undefined,
+          customColors: 'trace:magenta,debug:cyan,info:green,warn:yellow,error:red,fatal:bgRed',
+        },
+      }
+    : undefined,
 });
 
 export default logger;
