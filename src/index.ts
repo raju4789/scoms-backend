@@ -1,29 +1,44 @@
 import express from 'express';
 import dotenv from 'dotenv';
-import { Client } from 'pg';
-import logger from '../utils/logger';
+import logger from './utils/logger';
+import router from './routes';
+import { AppError } from './errors/AppError';
+import { errorResponse } from './types/CommonApiResponse';
+import { AppDataSource } from './config/data-source';
+import { runInitialDataLoad } from './utils/dbBootstrap';
 
 dotenv.config();
 
 const app = express();
 const port = 3000;
 
-const dbClient = new Client({
-  host: process.env.DB_HOST,
-  port: parseInt(process.env.DB_PORT || '5432', 10),
-  user: process.env.DB_USER,
-  password: process.env.DB_PASSWORD,
-  database: process.env.DB_NAME,
-});
+app.use(express.json());
+app.use(router);
 
-dbClient.connect()
-  .then(() => logger.info('Connected to PostgreSQL'))
-  .catch((err: Error) => logger.error({ err }, 'PostgreSQL connection error'));
+(async () => {
+  try {
+    await AppDataSource.initialize();
+    logger.info('TypeORM DataSource initialized');
+    await runInitialDataLoad();
+  } catch (err) {
+    logger.error({ err }, 'TypeORM initialization or seeding failed');
+    process.exit(1);
+  }
 
-app.get('/health', (req, res) => {
-  res.status(200).send('OK');
-});
+  app.get('/health', (req, res) => {
+    res.status(200).send('OK');
+  });
 
-app.listen(port, () => {
-  logger.info(`Server is running on http://localhost:${port}`);
-});
+  // Global error handler middleware
+  app.use((err: any, req: express.Request, res: express.Response, next: express.NextFunction) => {
+    if (err instanceof AppError) {
+      res.status(400).json(errorResponse(400, err.message));
+    } else {
+      res.status(500).json(errorResponse(500, err.message || 'Internal Server Error'));
+    }
+  });
+
+  app.listen(port, () => {
+    logger.info(`Server is running on http://localhost:${port}`);
+  });
+})();

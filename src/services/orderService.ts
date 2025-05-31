@@ -1,4 +1,5 @@
 import * as warehouseRepository from '../repositories/warehouseRepository';
+import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
 import { AppError } from '../errors/AppError';
 import { haversineDistanceKm, getDiscountRate, runInTransaction } from '../utils/orderUtils';
@@ -223,3 +224,6 @@ export const submitOrder: (input: OrderInput) => Promise<OrderSubmissionResult> 
     throw error;
   }
 };
+
+export const getOrders = orderRepository.getOrders;
+export const getOrderById = orderRepository.getOrderById;

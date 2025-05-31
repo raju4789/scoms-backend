@@ -1,0 +1,26 @@
+### Get all orders
+GET http://localhost:3000/api/v1/orders
+
+### Get order by ID
+GET http://localhost:3000/api/v1/orders/abc
+
+### Verify order
+POST http://localhost:3000/api/v1/orders/verify
+Content-Type: application/json
+
+{
+  "quantity": 4000,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+### Submit order (explicit endpoint)
+POST http://localhost:3000/api/v1/orders/submit
+Content-Type: application/json
+
+{
+  "quantity": 1,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+

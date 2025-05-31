@@ -1,5 +1,5 @@
-import { AppDataSource } from '../config/data-source';
-import logger from '../utils/logger';
+import { AppDataSource } from './config/data-source';
+import logger from './utils/logger';
 
 AppDataSource.initialize()
   .then(() => {

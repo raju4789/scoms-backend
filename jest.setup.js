@@ -1,5 +1,5 @@
 // This file mocks the logger globally for all Jest tests, suppressing all log output.
-jest.mock('./utils/logger', () => ({
+jest.mock('./src/utils/logger', () => ({
   __esModule: true,
   default: {
     info: jest.fn(),

@@ -1,0 +1,27 @@
+### Get all warehouses
+GET http://localhost:3000/api/v1/warehouses
+
+### Get warehouse by ID
+GET http://localhost:3000/api/v1/warehouses/1
+
+### Create warehouse
+POST http://localhost:3000/api/v1/warehouses
+Content-Type: application/json
+
+{
+  "name": "Berlin",
+  "latitude": 52.5200,
+  "longitude": 13.4050,
+  "stock": 100
+}
+
+### Update warehouse
+PUT http://localhost:3000/api/v1/warehouses/1
+Content-Type: application/json
+
+{
+  "stock": 200
+}
+
+### Delete warehouse
+DELETE http://localhost:3000/api/v1/warehouses/1

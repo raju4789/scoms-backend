@@ -3,7 +3,7 @@ import * as warehouseRepository from '../repositories/warehouseRepository';
 import { AppError } from '../errors/AppError';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
-import { validateWarehouseId, validateCreateWarehouseInput, validateUpdateWarehouseInput } from '../utils/warehouseValidation';
+import { validateCreateWarehouseInput, validateWarehouseId, validateUpdateWarehouseInput } from '../utils/warehouseValidation';
 
 /**
  * Creates a new warehouse after validating input.
