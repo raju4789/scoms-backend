@@ -1,7 +1,7 @@
 import * as orderService from './orderService';
 import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderUtils from '../utils/orderUtils';
-import { AppError } from '../errors/AppError';
+import { AppError, BusinessLogicError } from '../errors/ErrorTypes';
 import { OrderInput } from '../types/OrderServiceTypes';
 import { Warehouse } from '../models/Warehouse';
 
@@ -136,7 +136,7 @@ describe('orderService.submitOrder', () => {
     jest.spyOn(orderUtils, 'runInTransaction').mockImplementation(async (cb: any) => cb({ getRepository: () => ({ update: jest.fn(), save: jest.fn() }) }));
   });
 
-  it('should throw AppError if verifyOrder fails', async () => {
+  it('should throw BusinessLogicError if verifyOrder fails', async () => {
     jest.spyOn(orderService, 'verifyOrder').mockResolvedValue({
       isValid: false,
       totalPrice: 0,
@@ -145,10 +145,10 @@ describe('orderService.submitOrder', () => {
       reason: 'Invalid',
     });
     await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(AppError);
+      .rejects.toThrow(BusinessLogicError);
   });
 
-  it('should throw AppError if no warehouses in transaction', async () => {
+  it('should throw BusinessLogicError if no warehouses in transaction', async () => {
     jest.spyOn(orderService, 'verifyOrder').mockResolvedValue({
       isValid: true,
       totalPrice: 100,
@@ -157,12 +157,12 @@ describe('orderService.submitOrder', () => {
     });
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([]);
     await expect(orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }))
-      .rejects.toThrow(AppError);
+      .rejects.toThrow(BusinessLogicError);
   });
 
   it('should throw AppError if stock is insufficient during transaction', async () => {
     jest.spyOn(orderUtils, 'runInTransaction').mockImplementation(async () => {
-      throw new AppError('Stock insufficient', { name: 'OrderSubmissionError' });
+      throw new AppError('Stock insufficient');
     });
     jest.spyOn(orderService, 'verifyOrder').mockResolvedValue({
       isValid: true,
@@ -179,7 +179,7 @@ describe('orderService.submitOrder', () => {
 
   it('should throw if allocation changes and stock is insufficient during transaction', async () => {
     jest.spyOn(orderUtils, 'runInTransaction').mockImplementation(async () => {
-      throw new AppError('Stock insufficient', { name: 'OrderSubmissionError' });
+      throw new AppError('Stock insufficient');
     });
     jest.spyOn(orderService, 'verifyOrder').mockResolvedValue({
       isValid: true,
@@ -197,7 +197,7 @@ describe('orderService.submitOrder', () => {
 
   it('should throw if warehouse stock is just enough but another transaction depletes it', async () => {
     jest.spyOn(orderUtils, 'runInTransaction').mockImplementation(async () => {
-      throw new AppError('Stock depleted', { name: 'OrderSubmissionError' });
+      throw new AppError('Stock depleted');
     });
     jest.spyOn(orderService, 'verifyOrder').mockResolvedValue({
       isValid: true,

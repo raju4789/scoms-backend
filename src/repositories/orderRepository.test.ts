@@ -1,6 +1,6 @@
 import * as orderRepository from './orderRepository';
 import { Order, WarehouseAllocation } from '../models/Order';
-import { AppError } from '../errors/AppError';
+import { DatabaseError } from '../errors/ErrorTypes';
 import { AppDataSource } from '../config/data-source';
 
 const orderRepo = AppDataSource.getRepository(Order);
@@ -33,10 +33,10 @@ describe('orderRepository (unit, with mocks)', () => {
     await expect(orderRepository.createOrder(data)).resolves.toEqual({ ...validOrder, ...data });
   });
 
-  it('should throw AppError when createOrder throws', async () => {
+  it('should throw DatabaseError when createOrder throws', async () => {
     (orderRepo.create as any) = jest.fn((d: Partial<Order>) => ({ ...validOrder, ...d }));
     (orderRepo.save as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(orderRepository.createOrder({} as Partial<Order>)).rejects.toThrow(AppError);
+    await expect(orderRepository.createOrder({} as Partial<Order>)).rejects.toThrow(DatabaseError);
   });
 
   it('should get order by id if exists', async () => {
@@ -54,8 +54,8 @@ describe('orderRepository (unit, with mocks)', () => {
     await expect(orderRepository.getOrders()).resolves.toEqual([]);
   });
 
-  it('should throw AppError when getOrders throws', async () => {
+  it('should throw DatabaseError when getOrders throws', async () => {
     (orderRepo.find as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(orderRepository.getOrders()).rejects.toThrow(AppError);
+    await expect(orderRepository.getOrders()).rejects.toThrow(DatabaseError);
   });
 });

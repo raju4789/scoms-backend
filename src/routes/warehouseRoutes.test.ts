@@ -1,6 +1,8 @@
 import request from 'supertest';
 import express, { Express } from 'express';
 import warehouseRoutes from './warehouseRoutes';
+import { errorHandler } from '../middleware/errorHandler';
+import { correlationIdMiddleware } from '../middleware/correlationId';
 
 jest.mock('../services/warehouseService');
 const warehouseService = require('../services/warehouseService');
@@ -9,8 +11,10 @@ describe('warehouseRoutes', () => {
   let app: Express;
   beforeAll(() => {
     app = express();
+    app.use(correlationIdMiddleware);
     app.use(express.json());
     app.use('/api/v1/warehouses', warehouseRoutes);
+    app.use(errorHandler);
   });
 
   afterEach(() => jest.clearAllMocks());

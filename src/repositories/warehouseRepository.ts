@@ -1,6 +1,6 @@
 import { AppDataSource } from '../config/data-source';
 import { Warehouse } from '../models/Warehouse';
-import { AppError } from '../errors/AppError';
+import { DatabaseError } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 
 // Always use the singleton AppDataSource instance
@@ -15,7 +15,7 @@ export const createWarehouse = async (data: Partial<Warehouse>): Promise<Warehou
     return savedWarehouse;
   } catch (error) {
     logger.error({ error, data }, 'Failed to create warehouse');
-    throw new AppError('Failed to create warehouse', { name: 'WarehouseRepositoryError', cause: error });
+    throw new DatabaseError('create warehouse', error as Error);
   }
 };
 
@@ -27,7 +27,7 @@ export const getWarehouses = async (): Promise<Warehouse[]> => {
     return warehouses;
   } catch (error) {
     logger.error({ error }, 'Failed to fetch warehouses');
-    throw new AppError('Failed to fetch warehouses', { name: 'WarehouseRepositoryError', cause: error });
+    throw new DatabaseError('fetch warehouses', error as Error);
   }
 };
 
@@ -39,7 +39,7 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
     return warehouse;
   } catch (error) {
     logger.error({ error, id }, 'Failed to fetch warehouse by id');
-    throw new AppError('Failed to fetch warehouse by id', { name: 'WarehouseRepositoryError', cause: error });
+    throw new DatabaseError('fetch warehouse by id', error as Error);
   }
 };
 
@@ -52,7 +52,7 @@ export const updateWarehouse = async (id: number, data: Partial<Warehouse>): Pro
     return updatedWarehouse;
   } catch (error) {
     logger.error({ error, id, data }, 'Failed to update warehouse');
-    throw new AppError('Failed to update warehouse', { name: 'WarehouseRepositoryError', cause: error });
+    throw new DatabaseError('update warehouse', error as Error);
   }
 };
 
@@ -63,6 +63,6 @@ export const deleteWarehouse = async (id: number): Promise<void> => {
     logger.info({ id }, 'Warehouse deleted');
   } catch (error) {
     logger.error({ error, id }, 'Failed to delete warehouse');
-    throw new AppError('Failed to delete warehouse', { name: 'WarehouseRepositoryError', cause: error });
+    throw new DatabaseError('delete warehouse', error as Error);
   }
 };

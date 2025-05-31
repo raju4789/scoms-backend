@@ -1,6 +1,6 @@
 import * as warehouseRepository from './warehouseRepository';
 import { Warehouse } from '../models/Warehouse';
-import { AppError } from '../errors/AppError';
+import { DatabaseError } from '../errors/ErrorTypes';
 import { AppDataSource } from '../config/data-source';
 
 const warehouseRepo = AppDataSource.getRepository(Warehouse);
@@ -25,10 +25,10 @@ describe('warehouseRepository (unit, with mocks)', () => {
     await expect(warehouseRepository.createWarehouse(data)).resolves.toEqual({ ...validWarehouse, ...data });
   });
 
-  it('should throw AppError when createWarehouse throws', async () => {
+  it('should throw DatabaseError when createWarehouse throws', async () => {
     (warehouseRepo.create as any) = jest.fn((d: Partial<Warehouse>) => ({ ...validWarehouse, ...d }));
     (warehouseRepo.save as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(warehouseRepository.createWarehouse({} as Partial<Warehouse>)).rejects.toThrow(AppError);
+    await expect(warehouseRepository.createWarehouse({} as Partial<Warehouse>)).rejects.toThrow(DatabaseError);
   });
 
   it('should get warehouses (empty array)', async () => {
@@ -36,9 +36,9 @@ describe('warehouseRepository (unit, with mocks)', () => {
     await expect(warehouseRepository.getWarehouses()).resolves.toEqual([]);
   });
 
-  it('should throw AppError when getWarehouses throws', async () => {
+  it('should throw DatabaseError when getWarehouses throws', async () => {
     (warehouseRepo.find as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(warehouseRepository.getWarehouses()).rejects.toThrow(AppError);
+    await expect(warehouseRepository.getWarehouses()).rejects.toThrow(DatabaseError);
   });
 
   it('should get warehouse by id if exists', async () => {
@@ -57,9 +57,9 @@ describe('warehouseRepository (unit, with mocks)', () => {
     await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).resolves.toEqual(validWarehouse);
   });
 
-  it('should throw AppError when updateWarehouse throws', async () => {
+  it('should throw DatabaseError when updateWarehouse throws', async () => {
     (warehouseRepo.update as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).rejects.toThrow(AppError);
+    await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).rejects.toThrow(DatabaseError);
   });
 
   it('should delete warehouse successfully', async () => {
@@ -67,8 +67,8 @@ describe('warehouseRepository (unit, with mocks)', () => {
     await expect(warehouseRepository.deleteWarehouse(1)).resolves.toBeUndefined();
   });
 
-  it('should throw AppError when deleteWarehouse throws', async () => {
+  it('should throw DatabaseError when deleteWarehouse throws', async () => {
     (warehouseRepo.delete as any) = jest.fn(() => { throw new Error('fail'); });
-    await expect(warehouseRepository.deleteWarehouse(1)).rejects.toThrow(AppError);
+    await expect(warehouseRepository.deleteWarehouse(1)).rejects.toThrow(DatabaseError);
   });
 });

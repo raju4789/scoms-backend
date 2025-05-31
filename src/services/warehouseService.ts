@@ -1,6 +1,6 @@
 import logger from '../utils/logger';
 import * as warehouseRepository from '../repositories/warehouseRepository';
-import { AppError } from '../errors/AppError';
+import { AppError, NotFoundError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
 import { validateCreateWarehouseInput, validateWarehouseId, validateUpdateWarehouseInput } from '../utils/warehouseValidation';
@@ -57,7 +57,7 @@ export const updateWarehouse = async (id: number, data: UpdateWarehouseInput): P
   try {
     const updated = await warehouseRepository.updateWarehouse(id, data);
     if (!updated) {
-      throw new AppError('Warehouse not found', { name: 'WarehouseNotFoundError' });
+      throw new NotFoundError('Warehouse', id.toString());
     }
     return updated;
   } catch (error) {

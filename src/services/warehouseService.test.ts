@@ -1,6 +1,6 @@
 import * as warehouseService from './warehouseService';
 import * as warehouseRepository from '../repositories/warehouseRepository';
-import { AppError } from '../errors/AppError';
+import { ValidationError, NotFoundError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
 
@@ -26,15 +26,15 @@ describe('warehouseService', () => {
     });
     it('should throw if name is missing', async () => {
       const input = { latitude: 10, longitude: 20, stock: 100 } as any;
-      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(AppError);
+      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(ValidationError);
     });
     it('should throw if latitude/longitude are missing', async () => {
       const input = { name: 'Main', stock: 100 } as any;
-      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(AppError);
+      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(ValidationError);
     });
     it('should throw if stock is negative', async () => {
       const input = { name: 'Main', latitude: 10, longitude: 20, stock: -1 };
-      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(AppError);
+      await expect(warehouseService.createWarehouse(input)).rejects.toThrow(ValidationError);
     });
     it('should propagate repository errors', async () => {
       (warehouseRepository.createWarehouse as jest.Mock).mockRejectedValue(new Error('fail'));
@@ -58,7 +58,7 @@ describe('warehouseService', () => {
       expect(result).toEqual(mockWarehouse);
     });
     it('should throw for invalid id', async () => {
-      await expect(warehouseService.getWarehouseById(0)).rejects.toThrow(AppError);
+      await expect(warehouseService.getWarehouseById(0)).rejects.toThrow(ValidationError);
     });
   });
 
@@ -70,14 +70,14 @@ describe('warehouseService', () => {
       expect(result).toEqual(mockWarehouse);
     });
     it('should throw if id is invalid', async () => {
-      await expect(warehouseService.updateWarehouse(0, { stock: 10 })).rejects.toThrow(AppError);
+      await expect(warehouseService.updateWarehouse(0, { stock: 10 })).rejects.toThrow(ValidationError);
     });
     it('should throw if stock is negative', async () => {
-      await expect(warehouseService.updateWarehouse(1, { stock: -5 })).rejects.toThrow(AppError);
+      await expect(warehouseService.updateWarehouse(1, { stock: -5 })).rejects.toThrow(ValidationError);
     });
     it('should throw if warehouse not found', async () => {
       (warehouseRepository.updateWarehouse as jest.Mock).mockResolvedValue(null);
-      await expect(warehouseService.updateWarehouse(1, { stock: 10 })).rejects.toThrow(AppError);
+      await expect(warehouseService.updateWarehouse(1, { stock: 10 })).rejects.toThrow(NotFoundError);
     });
     it('should propagate repository errors', async () => {
       (warehouseRepository.updateWarehouse as jest.Mock).mockRejectedValue(new Error('fail'));
@@ -91,7 +91,7 @@ describe('warehouseService', () => {
       await expect(warehouseService.deleteWarehouse(1)).resolves.toBeUndefined();
     });
     it('should throw for invalid id', async () => {
-      await expect(warehouseService.deleteWarehouse(0)).rejects.toThrow(AppError);
+      await expect(warehouseService.deleteWarehouse(0)).rejects.toThrow(ValidationError);
     });
     it('should propagate repository errors', async () => {
       (warehouseRepository.deleteWarehouse as jest.Mock).mockRejectedValue(new Error('fail'));

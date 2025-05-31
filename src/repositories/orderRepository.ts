@@ -1,6 +1,6 @@
 import { AppDataSource } from '../config/data-source';
 import { Order } from '../models/Order';
-import { AppError } from '../errors/AppError';
+import { AppError, DatabaseError } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 
 const orderRepo = AppDataSource.getRepository(Order);
@@ -14,7 +14,7 @@ export const createOrder = async (data: Partial<Order>): Promise<Order> => {
     return savedOrder;
   } catch (error: unknown) {
     logger.error({ event: 'createOrder', error: error instanceof Error ? error.message : error, orderData: data }, 'Failed to create order');
-    throw new AppError('Failed to create order', { name: 'OrderRepositoryError', cause: error });
+    throw new DatabaseError('createOrder', error instanceof Error ? error : new Error('Unknown error'));
   }
 };
 
@@ -26,7 +26,7 @@ export const getOrderById = async (id: string): Promise<Order | null> => {
     return order;
   } catch (error: unknown) {
     logger.error({ event: 'getOrderById', error: error instanceof Error ? error.message : error, orderId: id }, 'Failed to fetch order by id');
-    throw new AppError('Failed to fetch order by id', { name: 'OrderRepositoryError', cause: error });
+    throw new DatabaseError('getOrderById', error instanceof Error ? error : new Error('Unknown error'));
   }
 };
 
@@ -38,6 +38,6 @@ export const getOrders = async (): Promise<Order[]> => {
     return orders;
   } catch (error: unknown) {
     logger.error({ event: 'getOrders', error: error instanceof Error ? error.message : error }, 'Failed to fetch orders');
-    throw new AppError('Failed to fetch orders', { name: 'OrderRepositoryError', cause: error });
+    throw new DatabaseError('getOrders', error instanceof Error ? error : new Error('Unknown error'));
   }
 };

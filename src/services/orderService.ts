@@ -1,7 +1,7 @@
 import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
-import { AppError } from '../errors/AppError';
+import { AppError, ValidationError, BusinessLogicError, NotFoundError, ErrorCategory } from '../errors/ErrorTypes';
 import { haversineDistanceKm, getDiscountRate, runInTransaction } from '../utils/orderUtils';
 import { OrderInput, OrderVerificationResult, OrderSubmissionResult, Allocation, AllocationAndShipping } from '../types/OrderServiceTypes';
 import { Warehouse } from '../models/Warehouse';
@@ -158,9 +158,9 @@ export const submitOrder: (input: OrderInput) => Promise<OrderSubmissionResult> 
     const verification: OrderVerificationResult = await verifyOrder(input);
     if (!verification.isValid) {
       logger.warn({ event: 'submitOrder', input, reason: verification.reason }, 'Order submission failed: verification failed');
-      throw new AppError(
+      throw new BusinessLogicError(
         verification.reason || 'Order verification failed',
-        { name: 'OrderSubmissionError' }
+        { correlationId: '', operation: 'submitOrder', resource: 'order' }
       );
     }
     // Recompute allocation for order submission inside the transaction for consistency
@@ -170,7 +170,7 @@ export const submitOrder: (input: OrderInput) => Promise<OrderSubmissionResult> 
 
       if (warehouses.length === 0) {
         logger.error({ event: 'submitOrder', input }, 'No warehouses available for order submission');
-        throw new AppError('No warehouses available to fulfill the order', { name: 'OrderSubmissionError' });
+        throw new BusinessLogicError('No warehouses available to fulfill the order');
       }
      
       const { allocation } = allocateOrderAcrossWarehouses(
@@ -186,9 +186,8 @@ export const submitOrder: (input: OrderInput) => Promise<OrderSubmissionResult> 
         if (allocationQuantity > 0) {
           if (warehouse.stock < allocationQuantity) {
             logger.error({ event: 'submitOrder', warehouse: warehouse.name, stock: warehouse.stock, allocationQuantity }, 'Stock inconsistency during order submission');
-            throw new AppError(
-              `Warehouse ${warehouse.name} does not have enough stock`,
-              { name: 'OrderSubmissionError' }
+            throw new BusinessLogicError(
+              `Warehouse ${warehouse.name} does not have enough stock`
             );
           }
           await manager.getRepository(Warehouse).update(warehouse.id, { stock: warehouse.stock - allocationQuantity });

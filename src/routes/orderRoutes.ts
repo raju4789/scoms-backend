@@ -1,13 +1,9 @@
-import { Router, Request, Response, NextFunction } from 'express';
+import { Router, Request, Response } from 'express';
 import * as orderService from '../services/orderService';
-import { successResponse, errorResponse } from '../types/CommonApiResponse';
+import { successResponse } from '../types/CommonApiResponse';
+import { asyncHandler } from '../middleware/errorHandler';
 
 const router = Router();
-
-// Async handler utility for DRY error handling
-const asyncHandler = (fn: (req: Request, res: Response, next: NextFunction) => Promise<any>) =>
-  (req: Request, res: Response, next: NextFunction) =>
-    Promise.resolve(fn(req, res, next)).catch(next);
 
 // GET /orders
 router.get('/', asyncHandler(async (req: Request, res: Response) => {
@@ -38,11 +34,5 @@ router.post('/', asyncHandler(async (req: Request, res: Response) => {
   const result = await orderService.submitOrder(req.body);
   res.json(successResponse(result));
 }));
-
-// Global error handler middleware for orderRoutes tests
-router.use((err: any, req: Request, res: Response, next: NextFunction) => {
-  res.status(500).json(errorResponse(500, err.message || 'Internal Server Error'));
-});
-
 
 export default router;
