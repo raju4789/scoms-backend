@@ -1,9 +1,25 @@
 import * as warehouseRepository from './warehouseRepository';
 import { Warehouse } from '../models/Warehouse';
 import { DatabaseError } from '../errors/ErrorTypes';
-import { AppDataSource } from '../config/data-source';
+import { getDataSource } from '../config/data-source-consul';
 
-const warehouseRepo = AppDataSource.getRepository(Warehouse);
+jest.mock('../config/data-source-consul');
+
+const mockRepo = {
+  create: jest.fn(),
+  save: jest.fn(),
+  findOneBy: jest.fn(),
+  find: jest.fn(),
+  update: jest.fn(),
+  delete: jest.fn(),
+};
+
+beforeEach(() => {
+  jest.clearAllMocks();
+  (getDataSource as jest.Mock).mockReturnValue({
+    getRepository: jest.fn().mockReturnValue(mockRepo),
+  });
+});
 
 const validWarehouse: Warehouse = {
   id: 1,
@@ -13,17 +29,13 @@ const validWarehouse: Warehouse = {
   stock: 100,
 };
 
-beforeEach(() => {
-  jest.clearAllMocks();
-});
-
 describe('warehouseRepository (unit, with mocks)', () => {
   it('should create a warehouse successfully', async () => {
-    (warehouseRepo.create as jest.Mock) = jest.fn((d: Partial<Warehouse>) => ({
+    mockRepo.create.mockImplementation((d: Partial<Warehouse>) => ({
       ...validWarehouse,
       ...d,
     }));
-    (warehouseRepo.save as jest.Mock) = jest.fn(async (warehouse: Warehouse) => warehouse);
+    mockRepo.save.mockResolvedValue(validWarehouse);
     const data = { name: 'A', stock: 100 } as Partial<Warehouse>;
     await expect(warehouseRepository.createWarehouse(data)).resolves.toEqual({
       ...validWarehouse,
@@ -32,70 +44,60 @@ describe('warehouseRepository (unit, with mocks)', () => {
   });
 
   it('should throw DatabaseError when createWarehouse throws', async () => {
-    (warehouseRepo.create as jest.Mock) = jest.fn((d: Partial<Warehouse>) => ({
+    mockRepo.create.mockImplementation((d: Partial<Warehouse>) => ({
       ...validWarehouse,
       ...d,
     }));
-    (warehouseRepo.save as jest.Mock) = jest.fn(() => {
-      throw new Error('fail');
-    });
+    mockRepo.save.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.createWarehouse({} as Partial<Warehouse>)).rejects.toThrow(
-      DatabaseError
+      DatabaseError,
     );
   });
 
   it('should get warehouses (empty array)', async () => {
-    (warehouseRepo.find as jest.Mock) = jest.fn(async () => []);
+    mockRepo.find.mockResolvedValue([]);
     await expect(warehouseRepository.getWarehouses()).resolves.toEqual([]);
   });
 
   it('should throw DatabaseError when getWarehouses throws', async () => {
-    (warehouseRepo.find as jest.Mock) = jest.fn(() => {
-      throw new Error('fail');
-    });
+    mockRepo.find.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.getWarehouses()).rejects.toThrow(DatabaseError);
   });
 
   it('should get warehouse by id if exists', async () => {
-    (warehouseRepo.findOneBy as jest.Mock) = jest.fn(async (where: Partial<Warehouse>) =>
-      where.id === 1 ? validWarehouse : null
+    mockRepo.findOneBy.mockImplementation(async (where: Partial<Warehouse>) =>
+      where.id === 1 ? validWarehouse : null,
     );
     await expect(warehouseRepository.getWarehouseById(1)).resolves.toEqual(validWarehouse);
   });
 
   it('should return null if warehouse by id does not exist', async () => {
-    (warehouseRepo.findOneBy as jest.Mock) = jest.fn(async (_where: Partial<Warehouse>) => null);
+    mockRepo.findOneBy.mockResolvedValue(null);
     await expect(warehouseRepository.getWarehouseById(999)).resolves.toBeNull();
   });
 
   it('should update warehouse successfully', async () => {
-    (warehouseRepo.update as jest.Mock) = jest.fn(async () => undefined);
-    (warehouseRepo.findOneBy as jest.Mock) = jest.fn(
-      async (_where: Partial<Warehouse>) => validWarehouse
-    );
+    mockRepo.update.mockResolvedValue(undefined);
+    mockRepo.findOneBy.mockResolvedValue(validWarehouse);
     await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).resolves.toEqual(
-      validWarehouse
+      validWarehouse,
     );
   });
 
   it('should throw DatabaseError when updateWarehouse throws', async () => {
-    (warehouseRepo.update as jest.Mock) = jest.fn(() => {
-      throw new Error('fail');
-    });
+    mockRepo.update.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).rejects.toThrow(
-      DatabaseError
+      DatabaseError,
     );
   });
 
   it('should delete warehouse successfully', async () => {
-    (warehouseRepo.delete as jest.Mock) = jest.fn(async () => undefined);
+    mockRepo.delete.mockResolvedValue(undefined);
     await expect(warehouseRepository.deleteWarehouse(1)).resolves.toBeUndefined();
   });
 
   it('should throw DatabaseError when deleteWarehouse throws', async () => {
-    (warehouseRepo.delete as jest.Mock) = jest.fn(() => {
-      throw new Error('fail');
-    });
+    mockRepo.delete.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.deleteWarehouse(1)).rejects.toThrow(DatabaseError);
   });
 });

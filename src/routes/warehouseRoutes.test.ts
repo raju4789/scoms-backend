@@ -65,4 +65,34 @@ describe('warehouseRoutes', () => {
     expect(res.status).toBe(500);
     expect(res.body.errorDetails.errorMessage).toMatch(/fail/);
   });
+
+  it('POST /api/v1/warehouses rejects unknown fields', async () => {
+    const res = await request(app)
+      .post('/api/v1/warehouses')
+      .send({ name: 'Main', latitude: 10, longitude: 20, stock: 100, extra: 'bad' });
+    expect(res.status).toBe(400);
+    expect(res.body.errorDetails.errorMessage).toMatch(/unknown field/i);
+  });
+
+  it('POST /api/v1/warehouses trims name and accepts valid input', async () => {
+    warehouseService.createWarehouse.mockResolvedValue({ ...mockWarehouse, name: 'Main' });
+    const res = await request(app)
+      .post('/api/v1/warehouses')
+      .send({ name: '  Main  ', latitude: 10, longitude: 20, stock: 100 });
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe('Main');
+  });
+
+  it('PUT /api/v1/warehouses/:id rejects unknown fields', async () => {
+    const res = await request(app).put('/api/v1/warehouses/1').send({ stock: 200, foo: 'bar' });
+    expect(res.status).toBe(400);
+    expect(res.body.errorDetails.errorMessage).toMatch(/unknown field/i);
+  });
+
+  it('PUT /api/v1/warehouses/:id trims name and accepts valid input', async () => {
+    warehouseService.updateWarehouse.mockResolvedValue({ ...mockWarehouse, name: 'Main' });
+    const res = await request(app).put('/api/v1/warehouses/1').send({ name: '  Main  ' });
+    expect(res.status).toBe(200);
+    expect(res.body.data.name).toBe('Main');
+  });
 });

@@ -23,7 +23,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
       ip: req.ip || req.connection?.remoteAddress,
       contentType: req.get('content-type'),
     },
-    `${req.method} ${req.originalUrl} - Request started`
+    `${req.method} ${req.originalUrl} - Request started`,
   );
 
   // Override res.end to log response
@@ -42,7 +42,7 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
         correlationId: req.correlationId,
         contentType: res.getHeader('content-type'),
       },
-      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`
+      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
     );
 
     // Call original end method

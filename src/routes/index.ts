@@ -1,10 +1,12 @@
+import healthRoutes from './healthRoutes';
 import orderRoutes from './orderRoutes';
 import warehouseRoutes from './warehouseRoutes';
 import { Router } from 'express';
 
 const router = Router();
 
-router.use('/api/v1/orders', orderRoutes);
-router.use('/api/v1/warehouses', warehouseRoutes);
+router.use('/', healthRoutes);
+router.use('/orders', orderRoutes);
+router.use('/warehouses', warehouseRoutes);
 
 export default router;

@@ -1,112 +1,132 @@
 import express from 'express';
-import dotenv from 'dotenv';
+import * as dotenv from 'dotenv';
 import logger from './utils/logger';
-import router from './routes';
-import { AppDataSource } from './config/data-source';
-import { runInitialDataLoad } from './utils/dbBootstrap';
-import { errorHandler, setupGlobalErrorHandlers } from './middleware/errorHandler';
+import { closeDataSource, initializeDataSource } from './config/data-source-consul';
+import consulService from './config/consul';
 import { correlationIdMiddleware } from './middleware/correlationId';
+import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
-import healthRoutes from './routes/healthRoutes';
+import routes from './routes';
+import { runInitialDataLoad } from './utils/dbBootstrap';
+import { preloadConsulConfig } from './utils/consulBootstrap';
 
+// Load environment variables from .env file
 dotenv.config();
 
-const app = express();
-const port = process.env.PORT || 3000;
-
-// Setup global error handlers for unhandled rejections and exceptions
-setupGlobalErrorHandlers();
-
-// Middleware setup
-app.use(express.json({ limit: '10mb' }));
-app.use(express.urlencoded({ extended: true, limit: '10mb' }));
-
-// Add correlation ID to all requests
-app.use(correlationIdMiddleware);
-
-// Add HTTP request/response logging
-app.use(requestLogger);
-
-// Add security headers
-app.use((req, res, next) => {
-  res.setHeader('X-Content-Type-Options', 'nosniff');
-  res.setHeader('X-Frame-Options', 'DENY');
-  res.setHeader('X-XSS-Protection', '1; mode=block');
-  next();
-});
-
-// Health check routes (before main router)
-app.use(healthRoutes);
-
-// Main API routes
-app.use(router);
-
-// Main startup function
-async function startServer() {
+async function bootstrap() {
   try {
-    await AppDataSource.initialize();
-    logger.info('TypeORM DataSource initialized');
-    await runInitialDataLoad();
-    logger.info('Initial data loading completed');
+    // 1. Preload Consul config based on environment
+    const environment = process.env.NODE_ENV || 'development';
+    logger.info(`Preloading Consul configuration for ${environment} environment...`);
 
-    // 404 handler for unmatched routes
-    app.use((req, res) => {
-      res.status(404).json({
-        isSuccess: false,
-        data: null,
-        errorDetails: {
-          errorCode: 404,
-          errorMessage: `Route ${req.method} ${req.originalUrl} not found`,
-          correlationId: req.correlationId,
-          timestamp: new Date().toISOString(),
-        },
+    // Use unified bootstrap for both environments (preferred approach)
+    await preloadConsulConfig();
+
+    // 2. Initialize Consul service
+    logger.info('Initializing Consul service...');
+    await consulService.initialize();
+
+    // 3. Initialize database with Consul configuration
+    logger.info('Initializing database connection...');
+    await initializeDataSource();
+
+    // 4. Run initial data load (seed warehouses if needed)
+    logger.info('Running initial data load...');
+    await runInitialDataLoad();
+
+    // 5. Get server configuration from Consul
+    const serverConfig = consulService.getServerConfig();
+    const port = serverConfig.port;
+
+    // 6. Create Express application
+    const app = express();
+
+    // 7. Apply middleware
+    app.use(correlationIdMiddleware);
+    app.use(requestLogger);
+    app.use(express.json({ limit: '10mb' }));
+    app.use(express.urlencoded({ extended: true }));
+
+    // 8. Health check endpoints
+    app.get('/health', (req, res) => {
+      res.json({
+        status: 'ok',
+        timestamp: new Date().toISOString(),
+        environment: process.env.NODE_ENV,
+        consulConnected: consulService.isConsulConnected(),
       });
     });
 
-    // Global error handler middleware (must be last)
+    app.get('/health/ready', async (req, res) => {
+      try {
+        const isConsulHealthy = consulService.isConsulConnected();
+        res.json({
+          status: 'ready',
+          consul: isConsulHealthy,
+          database: true, // We'll assume DB is healthy if we got this far
+          timestamp: new Date().toISOString(),
+        });
+      } catch {
+        res.status(503).json({
+          status: 'not ready',
+          error: 'Service health check failed',
+        });
+      }
+    });
+
+    // 9. API routes
+    app.use('/api/v1', routes);
+
+    // 10. Root endpoint
+    app.get('/', (req, res) => {
+      res.json({
+        message: 'ScreenCloud Order Management System API',
+        version: '1.0.0',
+        environment: process.env.NODE_ENV,
+        consulUI: 'http://localhost:8500/ui/',
+      });
+    });
+
+    // 11. Error handling middleware (must be last)
     app.use(errorHandler);
 
+    // 12. Start server
     const server = app.listen(port, () => {
-      logger.info(`🚀 SCOMS Backend server running on http://localhost:${port}`);
-      logger.info(`📊 Health check available at http://localhost:${port}/health`);
-      logger.info(`🔍 Detailed health check at http://localhost:${port}/health/detailed`);
+      logger.info(`🚀 SCOMS API Server started successfully`, {
+        port,
+        environment: process.env.NODE_ENV,
+        consulUI: 'http://localhost:8500/ui/',
+        apiBase: `http://localhost:${port}/api/v1`,
+      });
     });
 
-    // Graceful shutdown handling
-    const gracefulShutdown = (signal: string) => {
-      logger.info(`${signal} received, starting graceful shutdown...`);
-
-      server.close(async err => {
-        if (err) {
-          logger.error({ err }, 'Error during server shutdown');
-          process.exit(1);
-        }
-
-        try {
-          await AppDataSource.destroy();
-          logger.info('Database connections closed');
-          logger.info('Graceful shutdown completed');
-          process.exit(0);
-        } catch (dbErr) {
-          logger.error({ err: dbErr }, 'Error closing database connections');
-          process.exit(1);
-        }
-      });
-
-      // Force shutdown after 30 seconds
-      setTimeout(() => {
-        logger.error('Forced shutdown after timeout');
-        process.exit(1);
-      }, 30000);
-    };
-
-    process.on('SIGTERM', () => gracefulShutdown('SIGTERM'));
-    process.on('SIGINT', () => gracefulShutdown('SIGINT'));
-  } catch (err) {
-    logger.error({ err }, 'Failed to start server');
+    // 13. Graceful shutdown
+    process.on('SIGTERM', () => gracefulShutdown(server));
+    process.on('SIGINT', () => gracefulShutdown(server));
+  } catch {
+    logger.error('Failed to start server');
+    await gracefulShutdown();
     process.exit(1);
   }
 }
 
-// Start the server
-startServer();
+async function gracefulShutdown(server?: any): Promise<void> {
+  logger.info('Graceful shutdown initiated...');
+
+  try {
+    if (server) {
+      server.close();
+      logger.info('HTTP server closed');
+    }
+
+    await closeDataSource();
+    logger.info('Database connection closed');
+
+    process.exit(0);
+  } catch (error) {
+    logger.error('Error during graceful shutdown:', error);
+    process.exit(1);
+  }
+}
+
+bootstrap();

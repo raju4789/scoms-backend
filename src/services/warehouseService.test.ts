@@ -71,18 +71,18 @@ describe('warehouseService', () => {
     });
     it('should throw if id is invalid', async () => {
       await expect(warehouseService.updateWarehouse(0, { stock: 10 })).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
     it('should throw if stock is negative', async () => {
       await expect(warehouseService.updateWarehouse(1, { stock: -5 })).rejects.toThrow(
-        ValidationError
+        ValidationError,
       );
     });
     it('should throw if warehouse not found', async () => {
       (warehouseRepository.updateWarehouse as jest.Mock).mockResolvedValue(null);
       await expect(warehouseService.updateWarehouse(1, { stock: 10 })).rejects.toThrow(
-        NotFoundError
+        NotFoundError,
       );
     });
     it('should propagate repository errors', async () => {

@@ -1,8 +1,16 @@
 import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
-import { BusinessLogicError } from '../errors/ErrorTypes';
-import { getDiscountRate, haversineDistanceKm, runInTransaction } from '../utils/orderUtils';
+import { BusinessLogicError, ValidationError } from '../errors/ErrorTypes';
+import {
+  getDevicePrice,
+  getDeviceWeight,
+  getDiscountRate,
+  getShippingCostThreshold,
+  getShippingRate,
+  haversineDistanceKm,
+  runInTransaction,
+} from '../utils/orderUtils';
 import {
   Allocation,
   AllocationAndShipping,
@@ -12,25 +20,21 @@ import {
 } from '../types/OrderServiceTypes';
 import { Warehouse } from '../models/Warehouse';
 import { Order as OrderEntity } from '../models/Order';
-
-const DEVICE_PRICE: number = 150;
-const DEVICE_WEIGHT_KG: number = 0.365;
-const SHIPPING_RATE_PER_KG_KM: number = 0.01;
-const SHIPPING_COST_THRESHOLD_PERCENT: number = 0.15;
+import { validateOrderInput } from '../utils/orderValidation';
 
 const sortWarehousesByProximity = (
   warehouses: Warehouse[],
   shipping_latitude: number,
-  shipping_longitude: number
+  shipping_longitude: number,
 ): (Warehouse & { distanceKm: number })[] => {
   return warehouses
-    .map(warehouse => ({
+    .map((warehouse) => ({
       ...warehouse,
       distanceKm: haversineDistanceKm(
         warehouse.latitude,
         warehouse.longitude,
         shipping_latitude,
-        shipping_longitude
+        shipping_longitude,
       ),
     }))
     .sort((warehouse1, warehouse2) => warehouse1.distanceKm - warehouse2.distanceKm);
@@ -40,7 +44,7 @@ const allocateOrderAcrossWarehouses = (
   quantity: number,
   shipping_latitude: number,
   shipping_longitude: number,
-  warehouses: Warehouse[]
+  warehouses: Warehouse[],
 ): AllocationAndShipping => {
   const totalStock: number = warehouses.reduce((sum, warehouse) => sum + warehouse.stock, 0);
 
@@ -55,7 +59,7 @@ const allocateOrderAcrossWarehouses = (
   const warehousesByDistance: (Warehouse & { distanceKm: number })[] = sortWarehousesByProximity(
     warehouses,
     shipping_latitude,
-    shipping_longitude
+    shipping_longitude,
   );
 
   for (const warehouse of warehousesByDistance) {
@@ -66,7 +70,7 @@ const allocateOrderAcrossWarehouses = (
     allocation.push({ warehouse: warehouse.name, quantity: allocatable });
 
     const shippingForThisWarehouse: number =
-      allocatable * DEVICE_WEIGHT_KG * warehouse.distanceKm * SHIPPING_RATE_PER_KG_KM;
+      allocatable * getDeviceWeight() * warehouse.distanceKm * getShippingRate();
     totalShippingCost += shippingForThisWarehouse;
     devicesRemaining -= allocatable;
   }
@@ -76,7 +80,7 @@ const allocateOrderAcrossWarehouses = (
 
 const buildAllocationMap = (allocations: Allocation[]): Map<string, number> => {
   return new Map<string, number>(
-    allocations.map(allocation => [allocation.warehouse, allocation.quantity])
+    allocations.map((allocation) => [allocation.warehouse, allocation.quantity]),
   );
 };
 
@@ -100,59 +104,61 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
   };
 
   try {
-    if (input.quantity <= 0) {
-      const reason = 'Quantity must be positive';
-      logger.warn(
-        { event: 'verifyOrder', input, reason },
-        'Order verification failed: Invalid quantity'
-      );
-      return { ...invalidOrderBase, reason };
+    // Always validate input, even if called directly
+    try {
+      validateOrderInput(input);
+    } catch (err) {
+      if (err instanceof ValidationError) {
+        // Use the first error detail as the reason, or fallback to the error message
+        let reason = err.message;
+        if (err.details && typeof err.details === 'object') {
+          const firstDetail = Object.values(err.details)[0];
+          if (typeof firstDetail === 'string') {
+            reason = firstDetail;
+          }
+        }
+        return { ...invalidOrderBase, reason };
+      }
+      throw err;
     }
 
     logger.info({ event: 'verifyOrder' }, 'Fetching all warehouses for allocation calculation');
-
     const warehouses: Warehouse[] = await warehouseRepository.getWarehouses();
     if (warehouses.length === 0) {
       const reason = 'No warehouses available to fulfill the order';
       logger.warn(
         { event: 'verifyOrder', input, reason },
-        'Order verification failed: No warehouses available'
+        'Order verification failed: No warehouses available',
       );
       return { ...invalidOrderBase, reason };
     }
-
     const { totalShippingCost, isStockSufficient }: AllocationAndShipping =
       allocateOrderAcrossWarehouses(
         input.quantity,
         input.shipping_latitude,
         input.shipping_longitude,
-        warehouses
+        warehouses,
       );
-
     if (!isStockSufficient) {
       const reason = 'Not enough stock in all warehouses';
       return { ...invalidOrderBase, reason };
     }
-
     const discountRate: number = getDiscountRate(input.quantity);
-    const totalPrice: number = DEVICE_PRICE * input.quantity * (1 - discountRate);
-    const discount: number = DEVICE_PRICE * input.quantity * discountRate;
+    const totalPrice: number = getDevicePrice() * input.quantity * (1 - discountRate);
+    const discount: number = getDevicePrice() * input.quantity * discountRate;
     const shippingCost: number = Math.round(totalShippingCost * 100) / 100;
-
-    if (totalPrice > 0 && shippingCost > SHIPPING_COST_THRESHOLD_PERCENT * totalPrice) {
+    if (totalPrice > 0 && shippingCost > getShippingCostThreshold() * totalPrice) {
       const reason = 'Shipping cost exceeds 15% of the order amount after discount';
       logger.warn(
         { event: 'verifyOrder', input, shippingCost, totalPrice, reason },
-        'Order verification failed: Shipping cost threshold exceeded'
+        'Order verification failed: Shipping cost threshold exceeded',
       );
       return { ...invalidOrderBase, reason };
     }
-
     logger.info(
       { event: 'verifyOrder', totalPrice, discount, shippingCost, isStockSufficient },
-      'Order verification result calculated'
+      'Order verification result calculated',
     );
-
     return {
       isValid: true,
       totalPrice,
@@ -162,8 +168,23 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
   } catch (error: unknown) {
     logger.error(
       { event: 'verifyOrder', error: error instanceof Error ? error.message : error, input },
-      'Order verification failed with exception'
+      'Order verification failed with exception',
     );
+    // If error is a ValidationError, return its message as the reason
+    if (error instanceof ValidationError) {
+      let reason = error.message;
+      if (error.details && typeof error.details === 'object') {
+        // Use the first error message from details if available
+        const firstDetail = Object.values(error.details)[0];
+        if (typeof firstDetail === 'string') {
+          reason = firstDetail;
+        }
+      }
+      return {
+        ...invalidOrderBase,
+        reason,
+      };
+    }
     return {
       ...invalidOrderBase,
       reason: 'unknown error during order verification',
@@ -190,7 +211,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
       const reason: string = verification.reason || 'Order verification failed';
       logger.warn(
         { event: 'submitOrder', input, reason },
-        'Order submission failed: verification failed'
+        'Order submission failed: verification failed',
       );
       throw new BusinessLogicError(reason, {
         correlationId: '',
@@ -200,17 +221,17 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
     }
 
     // Recompute allocation within transaction for data consistency
-    const result: OrderEntity = await runInTransaction(async manager => {
+    const result: OrderEntity = await runInTransaction(async (manager) => {
       const warehouses: Warehouse[] = await warehouseRepository.getWarehouses();
       logger.info(
         { event: 'submitOrder', warehousesCount: warehouses.length },
-        'Warehouses fetched for order submission'
+        'Warehouses fetched for order submission',
       );
 
       if (warehouses.length === 0) {
         logger.error(
           { event: 'submitOrder', input },
-          'No warehouses available for order submission'
+          'No warehouses available for order submission',
         );
         throw new BusinessLogicError('No warehouses available to fulfill the order');
       }
@@ -219,7 +240,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
         input.quantity,
         input.shipping_latitude,
         input.shipping_longitude,
-        warehouses
+        warehouses,
       );
       const allocationMap: Map<string, number> = buildAllocationMap(allocation);
 
@@ -234,7 +255,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
                 stock: warehouse.stock,
                 allocationQuantity,
               },
-              'Stock inconsistency during order submission'
+              'Stock inconsistency during order submission',
             );
             throw new BusinessLogicError(`Warehouse ${warehouse.name} does not have enough stock`);
           }
@@ -247,7 +268,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
               warehouse: warehouse.name,
               newStock,
             },
-            'Warehouse stock updated'
+            'Warehouse stock updated',
           );
         }
       }
@@ -266,7 +287,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
 
       logger.info(
         { event: 'submitOrder', orderId: createdOrder.id },
-        'Order submitted and persisted'
+        'Order submitted and persisted',
       );
 
       return createdOrder;
@@ -286,7 +307,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
         error: error instanceof Error ? error.message : String(error),
         input,
       },
-      'Order submission failed with error'
+      'Order submission failed with error',
     );
     throw error;
   }

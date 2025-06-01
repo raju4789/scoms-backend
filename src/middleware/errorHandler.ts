@@ -36,7 +36,7 @@ export function errorHandler(
   err: ExtendedError,
   req: Request,
   res: Response,
-  next: NextFunction
+  next: NextFunction,
 ): void {
   const startTime = Date.now();
   const errorId = uuidv4();
@@ -207,7 +207,7 @@ function sendErrorResponse(
     retryable?: boolean;
     helpUrl?: string;
     details?: Record<string, unknown>;
-  }
+  },
 ): void {
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -235,7 +235,7 @@ function sendErrorResponse(
  * Middleware to handle async route errors
  */
 export function asyncHandler(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -253,7 +253,7 @@ export function setupGlobalErrorHandlers(): void {
         reason,
         promise,
       },
-      'Unhandled Promise Rejection'
+      'Unhandled Promise Rejection',
     );
 
     // Graceful shutdown in production
@@ -262,14 +262,14 @@ export function setupGlobalErrorHandlers(): void {
     }
   });
 
-  process.on('uncaughtException', error => {
+  process.on('uncaughtException', (error) => {
     logger.error(
       {
         type: 'uncaught_exception',
         error,
         stack: error.stack,
       },
-      'Uncaught Exception'
+      'Uncaught Exception',
     );
 
     // Graceful shutdown

@@ -56,7 +56,7 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
  */
 export const updateWarehouse = async (
   id: number,
-  data: UpdateWarehouseInput
+  data: UpdateWarehouseInput,
 ): Promise<Warehouse> => {
   logger.info({ event: 'updateWarehouse', id, data }, 'Service: updateWarehouse called');
   validateWarehouseId(id);

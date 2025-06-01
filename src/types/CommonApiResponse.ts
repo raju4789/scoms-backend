@@ -19,7 +19,7 @@ export const successResponse = <T>(data: T): CommonApiResponse<T> => ({
 
 export const errorResponse = (
   errorCode: number,
-  errorMessage: string
+  errorMessage: string,
 ): CommonApiResponse<null> => ({
   isSuccess: false,
   data: null,

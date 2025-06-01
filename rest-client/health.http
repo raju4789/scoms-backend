@@ -1,0 +1,17 @@
+### Basic health check
+GET http://localhost:3000/api/v1/health
+
+### Detailed health check with dependencies
+GET http://localhost:3000/api/v1/health/detailed
+
+### Readiness probe (Kubernetes)
+GET http://localhost:3000/api/v1/ready
+
+### Liveness probe (Kubernetes)
+GET http://localhost:3000/api/v1/live
+
+### Legacy health check endpoints (from index.ts)
+GET http://localhost:3000/health
+
+### Legacy readiness check (from index.ts)
+GET http://localhost:3000/health/ready

@@ -9,7 +9,7 @@ POST http://localhost:3000/api/v1/orders/verify
 Content-Type: application/json
 
 {
-  "quantity": 4000,
+  "quantity": 1,
   "shipping_latitude": 10,
   "shipping_longitude": 20
 }

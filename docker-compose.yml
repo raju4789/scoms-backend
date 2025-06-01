@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   postgres:
     image: postgres:15
@@ -13,25 +11,63 @@ services:
       - postgres_data:/var/lib/postgresql/data
     networks:
       - scoms-net
+    healthcheck:
+      test: ['CMD-SHELL', 'pg_isready -U postgres -d scoms']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
 
-  pgadmin:
-    image: dpage/pgadmin4:8
-    environment:
-      PGADMIN_DEFAULT_EMAIL: admin@admin.com
-      PGADMIN_DEFAULT_PASSWORD: admin
+  consul:
+    image: consul:1.15
+    command: agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0
     ports:
-      - '5050:80'
-    depends_on:
-      - postgres
+      - '8500:8500'
     volumes:
-      - pgadmin_data:/var/lib/pgadmin
+      - consul_data:/consul/data
     networks:
       - scoms-net
+    healthcheck:
+      test: ['CMD', 'consul', 'info']
+      interval: 10s
+      timeout: 5s
+      retries: 5
+    restart: unless-stopped
+
+  scoms-app:
+    build: .
+    ports:
+      - '3000:3000'
+    environment:
+      - NODE_ENV=production
+      - CONSUL_HOST=consul
+      - CONSUL_PORT=8500
+      - DB_HOST=postgres
+      - DB_PORT=5432
+      - DB_USERNAME=postgres
+      - DB_PASSWORD=postgres
+      - DB_NAME=scoms
+      - DB_SSL=false
+    depends_on:
+      postgres:
+        condition: service_healthy
+      consul:
+        condition: service_healthy
+    networks:
+      - scoms-net
+    volumes:
+      - ./logs:/app/logs
+    restart: unless-stopped
+    healthcheck:
+      test: ['CMD', 'curl', '-f', 'http://localhost:3000/health']
+      interval: 30s
+      timeout: 10s
+      retries: 3
+      start_period: 60s
 
 volumes:
   postgres_data:
-  pgadmin_data:
+  consul_data:
 
 networks:
   scoms-net:
-    driver: bridge

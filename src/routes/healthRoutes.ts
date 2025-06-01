@@ -1,6 +1,7 @@
 import { Request, Response, Router } from 'express';
 import { StatusCodes } from 'http-status-codes';
-import { AppDataSource } from '../config/data-source';
+import { getDataSource } from '../config/data-source-consul';
+import consulService from '../config/consul';
 import { ErrorMetricsService } from '../services/errorMetricsService';
 import { successResponse } from '../types/CommonApiResponse';
 import { asyncHandler } from '../middleware/errorHandler';
@@ -24,7 +25,7 @@ router.get(
     };
 
     res.status(StatusCodes.OK).json(successResponse(health));
-  })
+  }),
 );
 
 /**
@@ -42,7 +43,7 @@ router.get(
 
     try {
       const dbStart = Date.now();
-      await AppDataSource.query('SELECT 1');
+      await getDataSource().query('SELECT 1');
       databaseLatency = Date.now() - dbStart;
 
       if (databaseLatency > 1000) {
@@ -54,14 +55,39 @@ router.get(
       databaseStatus = 'unhealthy';
     }
 
+    // Check Consul health
+    let consulStatus = 'healthy';
+    let consulLatency = 0;
+
+    try {
+      const consulStart = Date.now();
+      await consulService.getOrderConfig(); // Simple check to see if Consul is accessible
+      consulLatency = Date.now() - consulStart;
+
+      if (consulLatency > 1000) {
+        consulStatus = 'degraded';
+      }
+    } catch (err) {
+      logger.error('Consul connection failed', err);
+      consulStatus = 'unhealthy - using fallback configuration';
+    }
+
     // Get error statistics
     const errorStats = errorMetrics.getErrorStats();
 
     // Calculate overall health status
     let overallStatus = 'healthy';
-    if (databaseStatus === 'unhealthy' || errorStats.healthStatus === 'unhealthy') {
+    if (
+      databaseStatus === 'unhealthy' ||
+      errorStats.healthStatus === 'unhealthy' ||
+      consulStatus.includes('unhealthy')
+    ) {
       overallStatus = 'unhealthy';
-    } else if (databaseStatus === 'degraded' || errorStats.healthStatus === 'degraded') {
+    } else if (
+      databaseStatus === 'degraded' ||
+      errorStats.healthStatus === 'degraded' ||
+      consulStatus === 'degraded'
+    ) {
       overallStatus = 'degraded';
     }
 
@@ -79,6 +105,11 @@ router.get(
           latency: databaseLatency,
           type: 'PostgreSQL',
         },
+        consul: {
+          status: consulStatus,
+          latency: consulLatency,
+          type: 'Configuration Management',
+        },
       },
       metrics: {
         errors: errorStats,
@@ -95,7 +126,7 @@ router.get(
     const statusCode =
       overallStatus === 'healthy' ? StatusCodes.OK : StatusCodes.SERVICE_UNAVAILABLE;
     res.status(statusCode).json(successResponse(health));
-  })
+  }),
 );
 
 /**
@@ -106,7 +137,7 @@ router.get(
   asyncHandler(async (req: Request, res: Response) => {
     try {
       // Check if database is ready
-      await AppDataSource.query('SELECT 1');
+      await getDataSource().query('SELECT 1');
 
       res.status(StatusCodes.OK).json({
         status: 'ready',
@@ -121,7 +152,7 @@ router.get(
         reason: 'Database not available',
       });
     }
-  })
+  }),
 );
 
 /**

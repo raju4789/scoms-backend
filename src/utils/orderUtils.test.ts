@@ -1,5 +1,5 @@
 import { getDiscountRate, haversineDistanceKm, runInTransaction } from './orderUtils';
-import { AppDataSource } from '../config/data-source';
+import * as DataSourceConsul from '../config/data-source-consul';
 
 describe('orderUtils', () => {
   describe('haversineDistanceKm', () => {
@@ -42,17 +42,18 @@ describe('orderUtils', () => {
 
   describe('runInTransaction', () => {
     it('calls the provided function with a manager and returns its result', async () => {
-      // Mock AppDataSource.transaction
+      // Mock getDataSource().transaction
       const mockManager = { id: 123 };
-      const spy = jest
-        .spyOn(AppDataSource, 'transaction')
-        // eslint-disable-next-line @typescript-eslint/no-explicit-any
-        .mockImplementation(async (fn: any) => fn(mockManager));
-      const fn = jest.fn(async manager => manager.id);
+      const mockTransaction = jest.fn(async (fn: any) => fn(mockManager));
+      jest.spyOn(DataSourceConsul, 'getDataSource').mockReturnValue({
+        transaction: mockTransaction,
+      } as any);
+      const fn = jest.fn(async (manager) => manager.id);
       const result = await runInTransaction(fn);
       expect(fn).toHaveBeenCalledWith(mockManager);
       expect(result).toBe(123);
-      spy.mockRestore();
     });
   });
 });
+
+// NOTE: AppDataSource is not used in this project. Use getDataSource from data-source-consul if needed.

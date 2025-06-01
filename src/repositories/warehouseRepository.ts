@@ -1,14 +1,15 @@
-import { AppDataSource } from '../config/data-source';
+import { getDataSource } from '../config/data-source-consul';
 import { Warehouse } from '../models/Warehouse';
 import { DatabaseError } from '../errors/ErrorTypes';
 import logger from '../utils/logger';
 
-// Always use the singleton AppDataSource instance
-const warehouseRepo = AppDataSource.getRepository(Warehouse);
+// Get repository from the Consul-enabled DataSource
+const getWarehouseRepo = () => getDataSource().getRepository(Warehouse);
 
 export const createWarehouse = async (data: Partial<Warehouse>): Promise<Warehouse> => {
   try {
     logger.info({ data }, 'Creating new warehouse');
+    const warehouseRepo = getWarehouseRepo();
     const warehouse = warehouseRepo.create(data);
     const savedWarehouse = await warehouseRepo.save(warehouse);
     logger.info({ warehouseId: savedWarehouse.id }, 'Warehouse created successfully');
@@ -22,6 +23,7 @@ export const createWarehouse = async (data: Partial<Warehouse>): Promise<Warehou
 export const getWarehouses = async (): Promise<Warehouse[]> => {
   try {
     logger.info('Fetching all warehouses');
+    const warehouseRepo = getWarehouseRepo();
     const warehouses = await warehouseRepo.find();
     logger.info({ count: warehouses.length }, 'Fetched warehouses');
     return warehouses;
@@ -34,6 +36,7 @@ export const getWarehouses = async (): Promise<Warehouse[]> => {
 export const getWarehouseById = async (id: number): Promise<Warehouse | null> => {
   try {
     logger.info({ id }, 'Fetching warehouse by id');
+    const warehouseRepo = getWarehouseRepo();
     const warehouse = await warehouseRepo.findOneBy({ id });
     logger.info({ id, found: !!warehouse }, 'Warehouse fetch result');
     return warehouse;
@@ -45,10 +48,11 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
 
 export const updateWarehouse = async (
   id: number,
-  data: Partial<Warehouse>
+  data: Partial<Warehouse>,
 ): Promise<Warehouse | null> => {
   try {
     logger.info({ id, data }, 'Updating warehouse');
+    const warehouseRepo = getWarehouseRepo();
     await warehouseRepo.update(id, data);
     const updatedWarehouse = await warehouseRepo.findOneBy({ id });
     logger.info({ id, updated: !!updatedWarehouse }, 'Warehouse update result');
@@ -62,6 +66,7 @@ export const updateWarehouse = async (
 export const deleteWarehouse = async (id: number): Promise<void> => {
   try {
     logger.info({ id }, 'Deleting warehouse');
+    const warehouseRepo = getWarehouseRepo();
     await warehouseRepo.delete(id);
     logger.info({ id }, 'Warehouse deleted');
   } catch (error) {

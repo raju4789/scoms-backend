@@ -30,7 +30,7 @@ export class ErrorMetricsService {
         type: 'error_metrics',
         ...metrics,
       },
-      'Error metrics recorded'
+      'Error metrics recorded',
     );
 
     // Track error counts by category
@@ -61,7 +61,7 @@ export class ErrorMetricsService {
   } {
     const totalErrors = Array.from(this.errorCounts.values()).reduce(
       (sum, count) => sum + count,
-      0
+      0,
     );
     const errorsByCategory: Record<string, number> = {};
 
@@ -76,7 +76,7 @@ export class ErrorMetricsService {
     const highSeverityErrors = Object.entries(errorsByCategory)
       .filter(
         ([key]) =>
-          key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE)
+          key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE),
       )
       .reduce((sum, [, count]) => sum + count, 0);
 
@@ -153,7 +153,7 @@ export class ErrorMetricsService {
         type: 'critical_alert',
         ...metrics,
       },
-      'CRITICAL ERROR ALERT triggered'
+      'CRITICAL ERROR ALERT triggered',
     );
 
     // In production, this would trigger actual alerts:

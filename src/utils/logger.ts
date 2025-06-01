@@ -20,17 +20,20 @@ const logLevel = process.env.LOG_LEVEL || 'info';
 
 const logger = pino({
   level: logLevel,
-
-  // Minimal base fields for efficient log indexing
-  base: {
-    service: 'scoms-backend',
-    env: process.env.NODE_ENV || 'development',
-    version: process.env.npm_package_version || '1.0.0',
-    instance: process.env.HOSTNAME || process.env.POD_NAME || 'local',
-  },
-
-  // ISO timestamp for proper time-based queries
   timestamp: pino.stdTimeFunctions.isoTime,
+
+  // Enable pretty printing in development
+  ...(isDevelopment
+    ? {
+        transport: {
+          target: 'pino-pretty',
+          options: {
+            colorize: true,
+            translateTime: 'HH:MM:ss',
+          },
+        },
+      }
+    : {}),
 
   // Enhanced serializers for better log structure
   serializers: {
@@ -40,7 +43,7 @@ const logger = pino({
         statusCode?: number;
         correlationId?: string;
         stack?: string;
-      }
+      },
     ) => ({
       type: err.constructor.name,
       message: err.message,
@@ -80,29 +83,7 @@ const logger = pino({
     }),
   },
 
-  // Pretty colored output in development, JSON in production
-  transport: isDevelopment
-    ? {
-        target: 'pino-pretty',
-        options: {
-          colorize: true,
-          colorizeObjects: true,
-          levelFirst: true,
-          translateTime: 'yyyy-mm-dd HH:MM:ss',
-          ignore: 'pid,hostname,service,env,version,instance',
-          messageFormat: (log: Record<string, unknown>, messageKey: string, levelLabel: string) => {
-            const timestamp = new Date(log.time as string)
-              .toISOString()
-              .slice(0, 19)
-              .replace('T', ' ');
-            const level = levelLabel.toUpperCase().padEnd(5);
-            const message = (log[messageKey] as string) || '';
-            return `${level} [${timestamp}]: ${message}`;
-          },
-          customColors: 'trace:magenta,debug:cyan,info:green,warn:yellow,error:red,fatal:bgRed',
-        },
-      }
-    : undefined,
+  // No second transport configuration needed
 });
 
 export default logger;

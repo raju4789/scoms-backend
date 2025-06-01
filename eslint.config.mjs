@@ -7,7 +7,7 @@ import prettierConfig from 'eslint-config-prettier';
 export default [
   js.configs.recommended,
   {
-    files: ['**/*.{ts,js}'],
+    files: ['src/**/*.{ts,js}'],
     languageOptions: {
       parser: tsParser,
       parserOptions: {
@@ -62,6 +62,7 @@ export default [
       '@typescript-eslint/explicit-module-boundary-types': 'off',
       '@typescript-eslint/no-non-null-assertion': 'warn',
       '@typescript-eslint/no-var-requires': 'off', // Allow require in config files
+      '@typescript-eslint/no-require-imports': 'off', // Allow require style imports globally
 
       // General ESLint rules
       'no-console': ['warn', { allow: ['warn', 'error'] }],
@@ -90,12 +91,34 @@ export default [
     },
   },
   {
+    files: ['jest.config.ts', 'jest.setup.ts'],
+    languageOptions: {
+      parser: tsParser,
+      parserOptions: {
+        ecmaVersion: 2022,
+        sourceType: 'module',
+        // Don't use project for these files
+      },
+    },
+    plugins: {
+      '@typescript-eslint': tsPlugin,
+      prettier: prettierPlugin,
+    },
+    rules: {
+      ...tsPlugin.configs.recommended.rules,
+      '@typescript-eslint/no-var-requires': 'off',
+      'prettier/prettier': 'error',
+    },
+  },
+  {
     ignores: [
       'node_modules/',
       'dist/',
       'coverage/',
       '*.config.js',
       '*.setup.js',
+      '*.config.ts',
+      '*.setup.ts',
     ],
   },
 ];

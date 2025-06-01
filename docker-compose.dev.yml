@@ -1,0 +1,55 @@
+version: '3.8'
+
+# Development-only Docker Compose configuration
+# This file is for local development and does NOT include the SCOMS application
+# Developers run the application locally while using containerized supporting services
+
+services:
+  postgres:
+    image: postgres:15
+    environment:
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: postgres
+      POSTGRES_DB: scoms
+    ports:
+      - '5432:5432'
+    volumes:
+      - postgres_data_dev:/var/lib/postgresql/data
+    networks:
+      - scoms-dev-net
+
+  pgadmin:
+    image: dpage/pgadmin4:8
+    environment:
+      PGADMIN_DEFAULT_EMAIL: admin@admin.com
+      PGADMIN_DEFAULT_PASSWORD: admin
+    ports:
+      - '5050:80'
+    depends_on:
+      - postgres
+    volumes:
+      - pgadmin_data_dev:/var/lib/pgadmin
+    networks:
+      - scoms-dev-net
+
+  consul:
+    image: consul:1.15
+    command: agent -dev -ui -client=0.0.0.0 -bind=0.0.0.0
+    ports:
+      - '8500:8500'
+      - '8600:8600/udp'
+    environment:
+      - CONSUL_BIND_INTERFACE=eth0
+    volumes:
+      - consul_data_dev:/consul/data
+    networks:
+      - scoms-dev-net
+
+volumes:
+  postgres_data_dev:
+  pgadmin_data_dev:
+  consul_data_dev:
+
+networks:
+  scoms-dev-net:
+    driver: bridge

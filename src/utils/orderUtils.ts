@@ -1,4 +1,5 @@
-import { AppDataSource } from '../config/data-source';
+import { getDataSource } from '../config/data-source-consul';
+import consulService from '../config/consul';
 
 // Haversine formula constants
 const EARTH_RADIUS_KM: number = 6371;
@@ -6,6 +7,34 @@ const DEG_TO_RAD: number = Math.PI / 180;
 const HAVERSINE_FACTOR: number = 2;
 const HAVERSINE_DIVISOR: number = 2;
 const HAVERSINE_EXPONENT: number = 2;
+
+/**
+ * Get device price from Consul configuration
+ */
+export const getDevicePrice = (): number => {
+  return consulService.getOrderConfig().devicePrice;
+};
+
+/**
+ * Get device weight from Consul configuration
+ */
+export const getDeviceWeight = (): number => {
+  return consulService.getOrderConfig().deviceWeightKg;
+};
+
+/**
+ * Get shipping rate from Consul configuration
+ */
+export const getShippingRate = (): number => {
+  return consulService.getOrderConfig().shippingRatePerKgKm;
+};
+
+/**
+ * Get shipping cost threshold from Consul configuration
+ */
+export const getShippingCostThreshold = (): number => {
+  return consulService.getOrderConfig().shippingCostThresholdPercent;
+};
 
 /**
  * Calculates the great-circle distance between two points on the Earth using the Haversine formula.
@@ -21,9 +50,9 @@ export const haversineDistanceKm = (
   latitude1: number,
   longitude1: number,
   latitude2: number,
-  longitude2: number
+  longitude2: number,
 ): number => {
-  const toRadians: (degrees: number) => number = degrees => degrees * DEG_TO_RAD;
+  const toRadians: (degrees: number) => number = (degrees) => degrees * DEG_TO_RAD;
   const deltaLat: number = toRadians(latitude2 - latitude1);
   const deltaLon: number = toRadians(longitude2 - longitude1);
   const haversineFormulaComponent: number =
@@ -38,19 +67,14 @@ export const haversineDistanceKm = (
 };
 
 /**
- * Returns the discount rate for a given quantity based on predefined tiers.
+ * Returns the discount rate for a given quantity based on Consul configuration.
  * @param quantity - The number of items ordered
  * @returns The discount rate as a decimal (e.g., 0.1 for 10%)
  */
 export const getDiscountRate = (quantity: number): number => {
-  const DISCOUNT_TIERS: { minQuantity: number; discount: number }[] = [
-    { minQuantity: 250, discount: 0.2 },
-    { minQuantity: 100, discount: 0.15 },
-    { minQuantity: 50, discount: 0.1 },
-    { minQuantity: 25, discount: 0.05 },
-  ];
+  const discountTiers = consulService.getOrderConfig().discountTiers;
   let bestDiscount: number = 0;
-  for (const tier of DISCOUNT_TIERS) {
+  for (const tier of discountTiers) {
     if (quantity >= tier.minQuantity && tier.discount > bestDiscount) {
       bestDiscount = tier.discount;
     }
@@ -63,7 +87,7 @@ export const getDiscountRate = (quantity: number): number => {
  * Abstracts transaction management out of the service layer.
  */
 export async function runInTransaction<T>(
-  fn: (manager: import('typeorm').EntityManager) => Promise<T>
+  fn: (manager: import('typeorm').EntityManager) => Promise<T>,
 ): Promise<T> {
-  return AppDataSource.transaction(fn);
+  return getDataSource().transaction(fn);
 }

@@ -98,7 +98,7 @@ export class AppError extends Error {
       retryable?: boolean;
       helpUrl?: string;
       cause?: unknown;
-    } = {}
+    } = {},
   ) {
     super(message);
 
@@ -122,7 +122,7 @@ export class AppError extends Error {
 export class ValidationError extends AppError {
   constructor(message: string, details?: Record<string, unknown>, context?: ErrorContext) {
     super(message, {
-      statusCode: StatusCodes.UNPROCESSABLE_ENTITY,
+      statusCode: StatusCodes.BAD_REQUEST, // Changed from UNPROCESSABLE_ENTITY (422) to BAD_REQUEST (400)
       category: ErrorCategory.VALIDATION,
       severity: ErrorSeverity.LOW,
       context,
