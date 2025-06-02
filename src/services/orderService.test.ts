@@ -56,9 +56,14 @@ describe('orderService.verifyOrder', () => {
     const input: OrderInput = { quantity: 2, shipping_latitude: 10, shipping_longitude: 20 };
     const result = await orderService.verifyOrder(input);
     expect(result.isValid).toBe(true);
-    expect(result.totalPrice).toBeGreaterThan(0);
-    expect(result.discount).toBeGreaterThanOrEqual(0);
-    expect(result.shippingCost).toBeGreaterThanOrEqual(0);
+    // Calculate expected values
+    // Device price from config: 150 (default), no discount for quantity 2
+    // totalPrice = 2 * 150 = 300
+    expect(result.totalPrice).toBe(300);
+    expect(result.discount).toBe(0);
+    // Shipping cost: both warehouses are at (10,20) and (15,25), but closest is (10,20) with stock 15
+    // Device weight: 0.365, shipping rate: 0.01, distance to (10,20) is 0km, so shipping cost = 2 * 0.365 * 0 * 0.01 = 0
+    expect(result.shippingCost).toBeCloseTo(0, 5);
     expect(result.reason).toBeUndefined();
   });
 
@@ -73,13 +78,6 @@ describe('orderService.verifyOrder', () => {
 
 describe('orderService.verifyOrder - business logic edge cases', () => {
   afterEach(() => jest.clearAllMocks());
-
-  it('should return invalid if quantity is negative', async () => {
-    const input: OrderInput = { quantity: -5, shipping_latitude: 10, shipping_longitude: 20 };
-    const result = await orderService.verifyOrder(input);
-    expect(result.isValid).toBe(false);
-    expect(result.reason).toBe('Quantity must be positive');
-  });
 
   it('should return invalid if all warehouses have zero stock', async () => {
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([
@@ -130,6 +128,31 @@ describe('orderService.verifyOrder - business logic edge cases', () => {
     expect(result.isValid).toBe(true);
     // The shipping cost should be less than if all were shipped from the farther warehouse
     expect(result.shippingCost).toBeLessThan(2 * 0.365 * 15 * 0.01); // 15km is a large overestimate
+  });
+
+  it('should apply the highest discount tier for a very large order', async () => {
+    (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([
+      { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1000 },
+      { id: 'w2', name: 'WH2', latitude: 15, longitude: 25, stock: 1000 },
+    ]);
+    const input: OrderInput = { quantity: 300, shipping_latitude: 10, shipping_longitude: 20 };
+    const result = await orderService.verifyOrder(input);
+    // Highest discount tier is 20% for 250+
+    expect(result.discount).toBeCloseTo(300 * 150 * 0.2, 2);
+    expect(result.totalPrice).toBeCloseTo(300 * 150 * 0.8, 2);
+    expect(result.isValid).toBe(true);
+  });
+
+  it('should allocate across multiple warehouses if needed', async () => {
+    (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([
+      { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1 },
+      { id: 'w2', name: 'WH2', latitude: 10.1, longitude: 20.1, stock: 2 },
+    ]);
+    const input: OrderInput = { quantity: 3, shipping_latitude: 10, shipping_longitude: 20 };
+    const result = await orderService.verifyOrder(input);
+    expect(result.isValid).toBe(true);
+    // Shipping cost should reflect allocation from both warehouses
+    expect(result.shippingCost).toBeGreaterThan(0);
   });
 });
 

@@ -71,7 +71,7 @@ class ConsulService {
   private environment: string;
   private isConnected: boolean = false;
   private configCache: AppConfig | null = null;
-  private configWatchers: Map<string, any> = new Map();
+  private configWatchers: Map<string, unknown> = new Map();
   private reconnectAttempts: number = 0;
   private maxReconnectAttempts: number = 10;
   private reconnectInterval: number = 5000; // 5 seconds
@@ -248,7 +248,9 @@ class ConsulService {
       const result = await this.consul.kv.get(configKey);
 
       if (result && result.Value) {
-        const parsedConfig = JSON.parse(result.Value);
+        // Fix for JSON.parse(data.Value):
+        const valueStr = typeof result.Value === 'string' ? result.Value : '';
+        const parsedConfig = JSON.parse(valueStr);
 
         // Validate configuration before applying
         if (this.validateConfiguration(parsedConfig)) {
@@ -371,10 +373,11 @@ class ConsulService {
         options: { key: configKey },
       });
 
-      watcher.on('change', (data: Record<string, any>) => {
+      watcher.on('change', (data: Record<string, unknown>) => {
         try {
           if (data && data.Value) {
-            const newConfig = JSON.parse(data.Value);
+            const valueStr = typeof data.Value === 'string' ? data.Value : '{}';
+            const newConfig = JSON.parse(valueStr);
 
             // Validate configuration before applying
             if (this.validateConfiguration(newConfig)) {
@@ -492,6 +495,26 @@ class ConsulService {
   }
 
   /**
+   * Set a key-value pair in Consul
+   */
+  async setKV(key: string, value: string): Promise<void> {
+    if (!this.isConnected) {
+      throw new Error('Consul is not connected');
+    }
+    await this.consul.kv.set(key, value);
+  }
+
+  /**
+   * Get a value from Consul by key
+   */
+  async getKV(key: string): Promise<unknown> {
+    if (!this.isConnected) {
+      throw new Error('Consul is not connected');
+    }
+    return await this.consul.kv.get(key);
+  }
+
+  /**
    * Update configuration in Consul
    */
   async updateConfig(config: Partial<AppConfig>): Promise<void> {
@@ -601,7 +624,8 @@ class ConsulService {
     try {
       // Stop all watchers
       for (const [key, watcher] of this.configWatchers.entries()) {
-        watcher.end();
+        // Fix for watcher.end():
+        (watcher as any).end();
         logger.info('Configuration watcher stopped', { key });
       }
       this.configWatchers.clear();

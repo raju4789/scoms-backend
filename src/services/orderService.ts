@@ -2,168 +2,91 @@ import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
 import { BusinessLogicError, ValidationError } from '../errors/ErrorTypes';
-import { recordOrderMetric, recordError } from '../middleware/metrics';
+import { recordError, recordOrderMetric } from '../middleware/metrics';
 import {
-  getDevicePrice,
-  getDeviceWeight,
-  getDiscountRate,
-  getShippingCostThreshold,
-  getShippingRate,
-  haversineDistanceKm,
+  allocateOrderAcrossWarehouses,
+  buildAllocationMap,
+  calculatePricing,
+  extractValidationReason,
+  INVALID_ORDER_BASE,
   runInTransaction,
+  validateOrderInputSafe,
+  validateShippingCost,
 } from '../utils/orderUtils';
 import {
   Allocation,
-  AllocationAndShipping,
   OrderInput,
   OrderSubmissionResult,
   OrderVerificationResult,
 } from '../types/OrderServiceTypes';
 import { Warehouse } from '../models/Warehouse';
 import { Order as OrderEntity } from '../models/Order';
-import { validateOrderInput } from '../utils/orderValidation';
-
-const sortWarehousesByProximity = (
-  warehouses: Warehouse[],
-  shipping_latitude: number,
-  shipping_longitude: number,
-): (Warehouse & { distanceKm: number })[] => {
-  return warehouses
-    .map((warehouse) => ({
-      ...warehouse,
-      distanceKm: haversineDistanceKm(
-        warehouse.latitude,
-        warehouse.longitude,
-        shipping_latitude,
-        shipping_longitude,
-      ),
-    }))
-    .sort((warehouse1, warehouse2) => warehouse1.distanceKm - warehouse2.distanceKm);
-};
-
-const allocateOrderAcrossWarehouses = (
-  quantity: number,
-  shipping_latitude: number,
-  shipping_longitude: number,
-  warehouses: Warehouse[],
-): AllocationAndShipping => {
-  const totalStock: number = warehouses.reduce((sum, warehouse) => sum + warehouse.stock, 0);
-
-  if (totalStock < quantity || warehouses.length === 0) {
-    return { allocation: [], totalShippingCost: 0, isStockSufficient: false };
-  }
-
-  let devicesRemaining: number = quantity;
-  const allocation: Allocation[] = [];
-  let totalShippingCost: number = 0;
-
-  const warehousesByDistance: (Warehouse & { distanceKm: number })[] = sortWarehousesByProximity(
-    warehouses,
-    shipping_latitude,
-    shipping_longitude,
-  );
-
-  for (const warehouse of warehousesByDistance) {
-    if (devicesRemaining <= 0) break;
-    if (warehouse.stock <= 0) continue;
-
-    const allocatable: number = Math.min(warehouse.stock, devicesRemaining);
-    allocation.push({ warehouse: warehouse.name, quantity: allocatable });
-
-    const shippingForThisWarehouse: number =
-      allocatable * getDeviceWeight() * warehouse.distanceKm * getShippingRate();
-    totalShippingCost += shippingForThisWarehouse;
-    devicesRemaining -= allocatable;
-  }
-
-  return { allocation, totalShippingCost, isStockSufficient: true };
-};
-
-const buildAllocationMap = (allocations: Allocation[]): Map<string, number> => {
-  return new Map<string, number>(
-    allocations.map((allocation) => [allocation.warehouse, allocation.quantity]),
-  );
-};
 
 /**
  * Verifies an order based on the input quantity and shipping location.
  *
  * Validates quantity, calculates pricing with discounts, determines shipping costs,
  * and ensures shipping cost does not exceed 15% of the discounted total.
- *
- * @param input - Order input including quantity and shipping coordinates
- * @returns Promise resolving to order verification result with pricing details or failure reason
  */
 export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationResult> => {
   logger.info({ event: 'verifyOrder', input }, 'Verifying order');
 
-  const invalidOrderBase = {
-    isValid: false as const,
-    totalPrice: 0,
-    discount: 0,
-    shippingCost: 0,
-  };
-
   try {
-    // Always validate input, even if called directly
-    try {
-      validateOrderInput(input);
-    } catch (err) {
-      if (err instanceof ValidationError) {
-        // Use the first error detail as the reason, or fallback to the error message
-        let reason = err.message;
-        if (err.details && typeof err.details === 'object') {
-          const firstDetail = Object.values(err.details)[0];
-          if (typeof firstDetail === 'string') {
-            reason = firstDetail;
-          }
-        }
-        return { ...invalidOrderBase, reason };
-      }
-      throw err;
+    // Step 1: Validate input
+    const validationError = validateOrderInputSafe(input);
+    if (validationError) {
+      return { ...INVALID_ORDER_BASE, reason: validationError };
     }
 
-    logger.info({ event: 'verifyOrder' }, 'Fetching all warehouses for allocation calculation');
-    const warehouses: Warehouse[] = await warehouseRepository.getWarehouses();
+    // Step 2: Fetch warehouses
+    const warehouses = await warehouseRepository.getWarehouses();
     if (warehouses.length === 0) {
       const reason = 'No warehouses available to fulfill the order';
-      logger.warn(
-        { event: 'verifyOrder', input, reason },
-        'Order verification failed: No warehouses available',
-      );
-      return { ...invalidOrderBase, reason };
+      logger.warn({ event: 'verifyOrder', input, reason }, 'No warehouses available');
+      return { ...INVALID_ORDER_BASE, reason };
     }
-    const { totalShippingCost, isStockSufficient }: AllocationAndShipping =
-      allocateOrderAcrossWarehouses(
-        input.quantity,
-        input.shipping_latitude,
-        input.shipping_longitude,
-        warehouses,
-      );
-    if (!isStockSufficient) {
-      const reason = 'Not enough stock in all warehouses';
-      return { ...invalidOrderBase, reason };
-    }
-    const discountRate: number = getDiscountRate(input.quantity);
-    const totalPrice: number = getDevicePrice() * input.quantity * (1 - discountRate);
-    const discount: number = getDevicePrice() * input.quantity * discountRate;
-    const shippingCost: number = Math.round(totalShippingCost * 100) / 100;
-    if (totalPrice > 0 && shippingCost > getShippingCostThreshold() * totalPrice) {
-      const reason = 'Shipping cost exceeds 15% of the order amount after discount';
-      logger.warn(
-        { event: 'verifyOrder', input, shippingCost, totalPrice, reason },
-        'Order verification failed: Shipping cost threshold exceeded',
-      );
-      return { ...invalidOrderBase, reason };
-    }
-    logger.info(
-      { event: 'verifyOrder', totalPrice, discount, shippingCost, isStockSufficient },
-      'Order verification result calculated',
+
+    // Step 3: Check stock allocation
+    const allocation = allocateOrderAcrossWarehouses(
+      input.quantity,
+      input.shipping_latitude,
+      input.shipping_longitude,
+      warehouses,
     );
+
+    if (!allocation.isStockSufficient) {
+      return { ...INVALID_ORDER_BASE, reason: 'Not enough stock in all warehouses' };
+    }
+
+    // Step 4: Calculate pricing
+    const pricing = calculatePricing(input.quantity);
+    const shippingCost = Math.round(allocation.totalShippingCost * 100) / 100;
+
+    logger.info(
+      { event: 'verifyOrder', ...pricing, shippingCost },
+      'Order pricing calculated',
+    );
+
+    // Step 5: Validate shipping cost threshold
+    const shippingError = validateShippingCost(shippingCost, pricing.totalPrice);
+    if (shippingError) {
+      logger.warn(
+        { event: 'verifyOrder', input, shippingCost, totalPrice: pricing.totalPrice },
+        shippingError,
+      );
+      return { ...INVALID_ORDER_BASE, reason: shippingError };
+    }
+
+    // Step 6: Return successful verification
+    logger.info(
+      { event: 'verifyOrder', ...pricing, shippingCost },
+      'Order verification successful',
+    );
+
     return {
       isValid: true,
-      totalPrice,
-      discount,
+      totalPrice: pricing.totalPrice,
+      discount: pricing.discount,
       shippingCost,
     };
   } catch (error: unknown) {
@@ -171,26 +94,67 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
       { event: 'verifyOrder', error: error instanceof Error ? error.message : error, input },
       'Order verification failed with exception',
     );
-    // If error is a ValidationError, return its message as the reason
+
     if (error instanceof ValidationError) {
-      let reason = error.message;
-      if (error.details && typeof error.details === 'object') {
-        // Use the first error message from details if available
-        const firstDetail = Object.values(error.details)[0];
-        if (typeof firstDetail === 'string') {
-          reason = firstDetail;
-        }
-      }
-      return {
-        ...invalidOrderBase,
-        reason,
-      };
+      return { ...INVALID_ORDER_BASE, reason: extractValidationReason(error) };
     }
-    return {
-      ...invalidOrderBase,
-      reason: 'unknown error during order verification',
-    };
+
+    return { ...INVALID_ORDER_BASE, reason: 'Unknown error during order verification' };
   }
+};
+
+/**
+ * Update warehouse stock within a transaction
+ */
+const updateWarehouseStock = async (
+  manager: import('typeorm').EntityManager,
+  warehouses: Warehouse[],
+  allocationMap: Map<string, number>,
+): Promise<void> => {
+  for (const warehouse of warehouses) {
+    const allocationQuantity = allocationMap.get(warehouse.name) || 0;
+
+    if (allocationQuantity > 0) {
+      if (warehouse.stock < allocationQuantity) {
+        throw new BusinessLogicError(`Warehouse ${warehouse.name} does not have enough stock`);
+      }
+
+      const newStock = warehouse.stock - allocationQuantity;
+      await manager.getRepository(Warehouse).update(warehouse.id, { stock: newStock });
+
+      logger.info(
+        { event: 'updateWarehouseStock', warehouse: warehouse.name, newStock },
+        'Warehouse stock updated',
+      );
+    }
+  }
+};
+
+/**
+ * Create order entity within transaction
+ */
+const createOrderEntity = async (
+  manager: import('typeorm').EntityManager,
+  input: OrderInput,
+  verification: OrderVerificationResult,
+  allocation: Allocation[],
+): Promise<OrderEntity> => {
+  const orderData: Partial<OrderEntity> = {
+    quantity: input.quantity,
+    shipping_latitude: input.shipping_latitude,
+    shipping_longitude: input.shipping_longitude,
+    total_price: verification.totalPrice,
+    discount: verification.discount,
+    shipping_cost: verification.shippingCost,
+    warehouse_allocation: allocation,
+  };
+
+  const createdOrder = await manager.getRepository(OrderEntity).save(orderData);
+
+  logger.info({ event: 'createOrderEntity', orderId: createdOrder.id }, 'Order created');
+  recordOrderMetric('created', 'mixed');
+
+  return createdOrder;
 };
 
 /**
@@ -198,22 +162,17 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
  *
  * Verifies the order, allocates stock across warehouses, updates inventory,
  * and persists the order record within a database transaction.
- *
- * @param input - Order input including quantity and shipping coordinates
- * @returns Promise resolving to order submission result with order details
- * @throws BusinessLogicError when verification fails or stock is insufficient
  */
 export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionResult> => {
   logger.info({ event: 'submitOrder', input }, 'Submitting order for processing');
 
   try {
-    const verification: OrderVerificationResult = await verifyOrder(input);
+    // Step 1: Verify order
+    const verification = await verifyOrder(input);
     if (!verification.isValid) {
-      const reason: string = verification.reason || 'Order verification failed';
-      logger.warn(
-        { event: 'submitOrder', input, reason },
-        'Order submission failed: verification failed',
-      );
+      const reason = verification.reason || 'Order verification failed';
+      logger.warn({ event: 'submitOrder', input, reason }, 'Order verification failed');
+
       throw new BusinessLogicError(reason, {
         correlationId: '',
         operation: 'submitOrder',
@@ -221,80 +180,29 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
       });
     }
 
-    // Recompute allocation within transaction for data consistency
-    const result: OrderEntity = await runInTransaction(async (manager) => {
-      const warehouses: Warehouse[] = await warehouseRepository.getWarehouses();
-      logger.info(
-        { event: 'submitOrder', warehousesCount: warehouses.length },
-        'Warehouses fetched for order submission',
-      );
-
+    // Step 2: Execute transaction
+    const result = await runInTransaction(async (manager) => {
+      // Get fresh warehouse data within transaction
+      const warehouses = await warehouseRepository.getWarehouses();
       if (warehouses.length === 0) {
-        logger.error(
-          { event: 'submitOrder', input },
-          'No warehouses available for order submission',
-        );
         throw new BusinessLogicError('No warehouses available to fulfill the order');
       }
 
+      // Recalculate allocation for consistency
       const { allocation } = allocateOrderAcrossWarehouses(
         input.quantity,
         input.shipping_latitude,
         input.shipping_longitude,
         warehouses,
       );
-      const allocationMap: Map<string, number> = buildAllocationMap(allocation);
 
-      for (const warehouse of warehouses) {
-        const allocationQuantity: number = allocationMap.get(warehouse.name) || 0;
-        if (allocationQuantity > 0) {
-          if (warehouse.stock < allocationQuantity) {
-            logger.error(
-              {
-                event: 'submitOrder',
-                warehouse: warehouse.name,
-                stock: warehouse.stock,
-                allocationQuantity,
-              },
-              'Stock inconsistency during order submission',
-            );
-            throw new BusinessLogicError(`Warehouse ${warehouse.name} does not have enough stock`);
-          }
+      const allocationMap = buildAllocationMap(allocation);
 
-          const newStock: number = warehouse.stock - allocationQuantity;
-          await manager.getRepository(Warehouse).update(warehouse.id, { stock: newStock });
-          logger.info(
-            {
-              event: 'submitOrder',
-              warehouse: warehouse.name,
-              newStock,
-            },
-            'Warehouse stock updated',
-          );
-        }
-      }
+      // Update warehouse stock
+      await updateWarehouseStock(manager, warehouses, allocationMap);
 
-      const orderData: Partial<OrderEntity> = {
-        quantity: input.quantity,
-        shipping_latitude: input.shipping_latitude,
-        shipping_longitude: input.shipping_longitude,
-        total_price: verification.totalPrice,
-        discount: verification.discount,
-        shipping_cost: verification.shippingCost,
-        warehouse_allocation: allocation,
-      };
-
-      const createdOrder: OrderEntity = await manager.getRepository(OrderEntity).save(orderData);
-
-      logger.info(
-        { event: 'submitOrder', orderId: createdOrder.id },
-        'Order submitted and persisted',
-      );
-
-      // Record order metrics
-      recordOrderMetric('created', 'mixed'); // Since allocation could be across multiple warehouses
-
-      return createdOrder;
+      // Create order
+      return createOrderEntity(manager, input, verification, allocation);
     });
 
     return {
@@ -311,12 +219,10 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
         error: error instanceof Error ? error.message : String(error),
         input,
       },
-      'Order submission failed with error',
+      'Order submission failed',
     );
-    
-    // Record error metrics
+
     recordError('order_submission_failed', 'error');
-    
     throw error;
   }
 };

@@ -6,7 +6,8 @@ import consulService from './config/consul';
 import { correlationIdMiddleware } from './middleware/correlationId';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
-import { metricsMiddleware, metricsHandler } from './middleware/metrics';
+import { metricsHandler, metricsMiddleware } from './middleware/metrics';
+import authService from './services/authService';
 import routes from './routes';
 import { runInitialDataLoad } from './utils/dbBootstrap';
 import { preloadConsulConfig } from './utils/consulBootstrap';
@@ -26,6 +27,10 @@ async function bootstrap() {
     // 2. Initialize Consul service
     logger.info('Initializing Consul service...');
     await consulService.initialize();
+
+    // 2.1. Initialize authentication service
+    logger.info('Initializing authentication service...');
+    await authService.initialize();
 
     // 3. Initialize database with Consul configuration
     logger.info('Initializing database connection...');
@@ -79,7 +84,7 @@ async function bootstrap() {
     // 8.1. Metrics endpoint
     app.get('/metrics', metricsHandler);
 
-    // 9. API routes
+    // 9. API routes (authentication middleware is applied per route group)
     app.use('/api/v1', routes);
 
     // 10. Root endpoint
@@ -115,7 +120,7 @@ async function bootstrap() {
   }
 }
 
-async function gracefulShutdown(server?: any): Promise<void> {
+async function gracefulShutdown(server?: import('http').Server): Promise<void> {
   logger.info('Graceful shutdown initiated...');
 
   try {

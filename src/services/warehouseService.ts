@@ -3,7 +3,7 @@ import * as warehouseRepository from '../repositories/warehouseRepository';
 import { NotFoundError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
-import { recordWarehouseOperation, recordError } from '../middleware/metrics';
+import { recordError, recordWarehouseOperation } from '../middleware/metrics';
 import {
   validateCreateWarehouseInput,
   validateUpdateWarehouseInput,

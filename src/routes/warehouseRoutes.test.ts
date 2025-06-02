@@ -5,6 +5,11 @@ import { errorHandler } from '../middleware/errorHandler';
 import { correlationIdMiddleware } from '../middleware/correlationId';
 
 jest.mock('../services/warehouseService');
+jest.mock('../middleware/auth', () => ({
+  authMiddleware: (req: unknown, res: unknown, next: () => void) => next(),
+  requirePermission: () => (req: unknown, res: unknown, next: () => void) => next(),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const warehouseService = require('../services/warehouseService');
 

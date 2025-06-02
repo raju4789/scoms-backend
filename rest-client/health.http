@@ -1,17 +1,29 @@
-### Basic health check
-GET http://localhost:3000/api/v1/health
+### SCOMS Health Check Endpoints
+### Test health and monitoring endpoints (no authentication required)
+
+@baseUrl = http://localhost:3000/api/v1
+@metricsUrl = http://localhost:3000
+
+### Basic health check (from health routes)
+GET {{baseUrl}}/health
 
 ### Detailed health check with dependencies
-GET http://localhost:3000/api/v1/health/detailed
+GET {{baseUrl}}/health/detailed
 
 ### Readiness probe (Kubernetes)
-GET http://localhost:3000/api/v1/ready
+GET {{baseUrl}}/ready
 
 ### Liveness probe (Kubernetes)
-GET http://localhost:3000/api/v1/live
+GET {{baseUrl}}/live
 
 ### Legacy health check endpoints (from index.ts)
-GET http://localhost:3000/health
+GET {{metricsUrl}}/health
 
 ### Legacy readiness check (from index.ts)
-GET http://localhost:3000/health/ready
+GET {{metricsUrl}}/health/ready
+
+### Prometheus metrics endpoint
+GET {{metricsUrl}}/metrics
+
+### Root endpoint
+GET {{metricsUrl}}/

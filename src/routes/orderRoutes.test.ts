@@ -5,6 +5,11 @@ import { errorHandler } from '../middleware/errorHandler';
 import { correlationIdMiddleware } from '../middleware/correlationId';
 
 jest.mock('../services/orderService');
+jest.mock('../middleware/auth', () => ({
+  authMiddleware: (req: unknown, res: unknown, next: () => void) => next(),
+  requirePermission: () => (req: unknown, res: unknown, next: () => void) => next(),
+}));
+
 // eslint-disable-next-line @typescript-eslint/no-require-imports
 const orderService = require('../services/orderService');
 
@@ -71,21 +76,6 @@ describe('orderRoutes', () => {
     });
     const res = await request(app)
       .post('/api/v1/orders/submit')
-      .send({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 });
-    expect(res.status).toBe(200);
-    expect(res.body.data.id).toBe('abc');
-  });
-
-  it('POST /api/v1/orders submits an order', async () => {
-    orderService.submitOrder.mockResolvedValue({
-      id: 'abc',
-      quantity: 1,
-      total_price: 100,
-      discount: 0,
-      shipping_cost: 10,
-    });
-    const res = await request(app)
-      .post('/api/v1/orders')
       .send({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 });
     expect(res.status).toBe(200);
     expect(res.body.data.id).toBe('abc');

@@ -11,45 +11,47 @@ export function validateWarehouseId(id: string | number): number {
   return numericId;
 }
 
-export function validateCreateWarehouseInput(data: CreateWarehouseInput): void {
+export function validateCreateWarehouseInput(data: unknown): void {
+  const input = data as CreateWarehouseInput;
   // Only allow expected fields
   const allowedFields = ['name', 'latitude', 'longitude', 'stock'];
-  const extraFields = Object.keys(data).filter((key) => !allowedFields.includes(key));
+  const extraFields = Object.keys(input).filter((key) => !allowedFields.includes(key));
   if (extraFields.length > 0) {
     throw new ValidationError(`Unknown field(s) in request: ${extraFields.join(', ')}`);
   }
-  if (!data.name || typeof data.name !== 'string' || data.name.trim() === '') {
+  if (!input.name || typeof input.name !== 'string' || input.name.trim() === '') {
     throw new ValidationError('Warehouse name is required');
   }
-  data.name = data.name.trim();
-  if (typeof data.latitude !== 'number' || typeof data.longitude !== 'number') {
+  input.name = input.name.trim();
+  if (typeof input.latitude !== 'number' || typeof input.longitude !== 'number') {
     throw new ValidationError('Warehouse latitude and longitude are required');
   }
-  if (typeof data.stock !== 'number' || data.stock < 0) {
+  if (typeof input.stock !== 'number' || input.stock < 0) {
     throw new ValidationError('Warehouse stock must be a non-negative number');
   }
 }
 
-export function validateUpdateWarehouseInput(data: UpdateWarehouseInput): void {
+export function validateUpdateWarehouseInput(data: unknown): void {
+  const input = data as UpdateWarehouseInput;
   // Only allow expected fields
   const allowedFields = ['name', 'latitude', 'longitude', 'stock'];
-  const extraFields = Object.keys(data).filter((key) => !allowedFields.includes(key));
+  const extraFields = Object.keys(input).filter((key) => !allowedFields.includes(key));
   if (extraFields.length > 0) {
     throw new ValidationError(`Unknown field(s) in request: ${extraFields.join(', ')}`);
   }
-  if (data.name !== undefined) {
-    if (typeof data.name !== 'string' || data.name.trim() === '') {
+  if (input.name !== undefined) {
+    if (typeof input.name !== 'string' || input.name.trim() === '') {
       throw new ValidationError('Warehouse name must be a non-empty string');
     }
-    data.name = data.name.trim();
+    input.name = input.name.trim();
   }
-  if (data.latitude !== undefined && typeof data.latitude !== 'number') {
+  if (input.latitude !== undefined && typeof input.latitude !== 'number') {
     throw new ValidationError('Warehouse latitude must be a number');
   }
-  if (data.longitude !== undefined && typeof data.longitude !== 'number') {
+  if (input.longitude !== undefined && typeof input.longitude !== 'number') {
     throw new ValidationError('Warehouse longitude must be a number');
   }
-  if (data.stock !== undefined && (typeof data.stock !== 'number' || data.stock < 0)) {
+  if (input.stock !== undefined && (typeof input.stock !== 'number' || input.stock < 0)) {
     throw new ValidationError('Warehouse stock must be a non-negative number');
   }
 }
@@ -57,7 +59,7 @@ export function validateUpdateWarehouseInput(data: UpdateWarehouseInput): void {
 /**
  * Validates warehouse parameters (specifically the ID parameter)
  */
-export function validateWarehouseParams(params: any): { id: number } {
-  const id = validateWarehouseId(params.id);
+export function validateWarehouseParams(params: unknown): { id: number } {
+  const id = validateWarehouseId((params as { id: string | number }).id);
   return { id };
 }

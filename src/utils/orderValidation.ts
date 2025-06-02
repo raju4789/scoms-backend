@@ -5,46 +5,45 @@ import { ValidationError } from '../errors/ErrorTypes';
  * Comprehensive validation for OrderInput
  * Following industry best practices for input validation
  */
-export function validateOrderInput(data: any): OrderInput {
-  const errors: Record<string, string> = {};
-
-  // Check if data exists
+export function validateOrderInput(data: unknown): OrderInput {
   if (!data || typeof data !== 'object') {
     throw new ValidationError('Request body is required and must be an object');
   }
+  const input = data as OrderInput;
+  const errors: Record<string, string> = {};
 
   // Validate quantity
-  if (data.quantity === undefined || data.quantity === null) {
+  if (input.quantity === undefined || input.quantity === null) {
     errors.quantity = 'Quantity is required';
-  } else if (typeof data.quantity !== 'number') {
+  } else if (typeof input.quantity !== 'number') {
     errors.quantity = 'Quantity must be a number';
-  } else if (!Number.isInteger(data.quantity)) {
+  } else if (!Number.isInteger(input.quantity)) {
     errors.quantity = 'Quantity must be an integer';
-  } else if (data.quantity <= 0) {
+  } else if (input.quantity <= 0) {
     errors.quantity = 'Quantity must be positive';
-  } else if (data.quantity > 10000) {
+  } else if (input.quantity > 10000) {
     errors.quantity = 'Quantity cannot exceed 10,000 units';
   }
 
   // Validate shipping_latitude
-  if (data.shipping_latitude === undefined || data.shipping_latitude === null) {
+  if (input.shipping_latitude === undefined || input.shipping_latitude === null) {
     errors.shipping_latitude = 'Shipping latitude is required';
-  } else if (typeof data.shipping_latitude !== 'number') {
+  } else if (typeof input.shipping_latitude !== 'number') {
     errors.shipping_latitude = 'Shipping latitude must be a number';
-  } else if (!Number.isFinite(data.shipping_latitude)) {
+  } else if (!Number.isFinite(input.shipping_latitude)) {
     errors.shipping_latitude = 'Shipping latitude must be a finite number';
-  } else if (data.shipping_latitude < -90 || data.shipping_latitude > 90) {
+  } else if (input.shipping_latitude < -90 || input.shipping_latitude > 90) {
     errors.shipping_latitude = 'Shipping latitude must be between -90 and 90 degrees';
   }
 
   // Validate shipping_longitude
-  if (data.shipping_longitude === undefined || data.shipping_longitude === null) {
+  if (input.shipping_longitude === undefined || input.shipping_longitude === null) {
     errors.shipping_longitude = 'Shipping longitude is required';
-  } else if (typeof data.shipping_longitude !== 'number') {
+  } else if (typeof input.shipping_longitude !== 'number') {
     errors.shipping_longitude = 'Shipping longitude must be a number';
-  } else if (!Number.isFinite(data.shipping_longitude)) {
+  } else if (!Number.isFinite(input.shipping_longitude)) {
     errors.shipping_longitude = 'Shipping longitude must be a finite number';
-  } else if (data.shipping_longitude < -180 || data.shipping_longitude > 180) {
+  } else if (input.shipping_longitude < -180 || input.shipping_longitude > 180) {
     errors.shipping_longitude = 'Shipping longitude must be between -180 and 180 degrees';
   }
 
@@ -62,9 +61,9 @@ export function validateOrderInput(data: any): OrderInput {
 
   // Return validated and sanitized data
   return {
-    quantity: data.quantity,
-    shipping_latitude: data.shipping_latitude,
-    shipping_longitude: data.shipping_longitude,
+    quantity: input.quantity,
+    shipping_latitude: input.shipping_latitude,
+    shipping_longitude: input.shipping_longitude,
   };
 }
 

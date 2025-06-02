@@ -1,27 +1,129 @@
-### Get all warehouses
-GET http://localhost:3000/api/v1/warehouses
+### SCOMS Warehouses API Testing
+### Test warehouse endpoints with proper authentication
 
-### Get warehouse by ID
-GET http://localhost:3000/api/v1/warehouses/1
+@baseUrl = http://localhost:3000/api/v1
+@frontendKey = scoms-frontend-key
+@adminKey = scoms-admin-key
+@warehouseKey = scoms-warehouse-service-key
 
-### Create warehouse
-POST http://localhost:3000/api/v1/warehouses
+### Get all warehouses (requires warehouses:read permission)
+GET {{baseUrl}}/warehouses
+Authorization: Bearer {{warehouseKey}}
+
+### Get warehouse by ID (requires warehouses:read permission)
+GET {{baseUrl}}/warehouses/1
+Authorization: Bearer {{frontendKey}}
+
+### Create warehouse (requires warehouses:write permission)
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{adminKey}}
 Content-Type: application/json
 
 {
-  "name": "Berlin",
+  "name": "Berlin Distribution Center",
   "latitude": 52.5200,
   "longitude": 13.4050,
+  "stock": 500
+}
+
+### Create warehouse - US Location
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "name": "Chicago Warehouse",
+  "latitude": 41.8781,
+  "longitude": -87.6298,
+  "stock": 750
+}
+
+### Update warehouse stock (requires warehouses:write permission)
+PUT {{baseUrl}}/warehouses/1
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "stock": 1200
+}
+
+### Update warehouse name and location
+PUT {{baseUrl}}/warehouses/2
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "name": "Updated Warehouse Name",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "stock": 800
+}
+
+### Update only stock
+PUT {{baseUrl}}/warehouses/3
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "stock": 300
+}
+
+### Delete warehouse (requires warehouses:write permission)
+DELETE {{baseUrl}}/warehouses/999
+Authorization: Bearer {{adminKey}}
+
+### Test permission denial - Frontend trying to create warehouse
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "name": "Should Fail",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
   "stock": 100
 }
 
-### Update warehouse
-PUT http://localhost:3000/api/v1/warehouses/1
+### Test permission denial - Warehouse service trying to update
+PUT {{baseUrl}}/warehouses/1
+Authorization: Bearer {{warehouseKey}}
 Content-Type: application/json
 
 {
-  "stock": 200
+  "stock": 999
 }
 
-### Delete warehouse
-DELETE http://localhost:3000/api/v1/warehouses/1
+### Test validation error - Missing required fields
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "stock": 100
+}
+
+### Test validation error - Invalid coordinates
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "name": "Invalid Coords",
+  "latitude": 200,
+  "longitude": -200,
+  "stock": 100
+}
+
+### Test validation error - Negative stock
+POST {{baseUrl}}/warehouses
+Authorization: Bearer {{adminKey}}
+Content-Type: application/json
+
+{
+  "name": "Negative Stock",
+  "latitude": 40.7128,
+  "longitude": -74.0060,
+  "stock": -50
+}

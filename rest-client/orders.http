@@ -1,26 +1,115 @@
-### Get all orders
-GET http://localhost:3000/api/v1/orders
+### SCOMS Orders API Testing
+### Test order endpoints with proper authentication
 
-### Get order by ID
-GET http://localhost:3000/api/v1/orders/abc
+@baseUrl = http://localhost:3000/api/v1
+@frontendKey = scoms-frontend-key
+@adminKey = scoms-admin-key
 
-### Verify order
-POST http://localhost:3000/api/v1/orders/verify
+### Get all orders (requires orders:read permission)
+GET {{baseUrl}}/orders
+Authorization: Bearer {{frontendKey}}
+
+### Get order by ID (requires orders:read permission)
+GET {{baseUrl}}/orders/123e4567-e89b-12d3-a456-426614174000
+Authorization: Bearer {{frontendKey}}
+
+### Verify order - normal order (valid)
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
 Content-Type: application/json
 
 {
-  "quantity": 1,
+  "quantity": 2,
   "shipping_latitude": 10,
   "shipping_longitude": 20
 }
 
-### Submit order (explicit endpoint)
-POST http://localhost:3000/api/v1/orders/submit
+### Verify order - invalid (quantity <= 0)
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 0,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+### Verify order - invalid (not enough stock)
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 10000,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+
+### Verify order - bulk discount (quantity triggers discount tier)
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 25,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+### Verify order - shipping cost exceeds 15% of the order amount after discount
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 300,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+### Verify order - multi-warehouse allocation
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 3,
+  "shipping_latitude": 10,
+  "shipping_longitude": 20
+}
+
+### Verify order - minimum order (edge case)
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
 Content-Type: application/json
 
 {
   "quantity": 1,
-  "shipping_latitude": 10,
-  "shipping_longitude": 20
+  "shipping_latitude": -33.8688,
+  "shipping_longitude": 151.2093
+}
+
+### Verify order - zero shipping fee for orders already at warehouses
+POST {{baseUrl}}/orders/verify
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 5,
+  "shipping_latitude": 51.5074,
+  "shipping_longitude": -0.1278
+}
+
+### Submit order (explicit endpoint - requires orders:write permission)
+POST {{baseUrl}}/orders/submit
+Authorization: Bearer {{frontendKey}}
+Content-Type: application/json
+
+{
+  "quantity": 25,
+  "shipping_latitude": 34.0522,
+  "shipping_longitude": -118.2437
 }
 

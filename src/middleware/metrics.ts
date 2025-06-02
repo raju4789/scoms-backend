@@ -1,4 +1,4 @@
-import { Request, Response, NextFunction } from 'express';
+import { NextFunction, Request, Response } from 'express';
 import client from 'prom-client';
 
 // Create a Registry to register metrics
@@ -8,9 +8,9 @@ const register = new client.Registry();
 const environment = process.env.NODE_ENV || 'development';
 
 // Default metrics with scoms_ prefix
-client.collectDefaultMetrics({ 
+client.collectDefaultMetrics({
   register,
-  prefix: 'scoms_nodejs_'
+  prefix: 'scoms_nodejs_',
 });
 
 // Custom metrics with scoms_ prefix and environment label
@@ -18,7 +18,7 @@ const httpRequestsTotal = new client.Counter({
   name: 'scoms_http_requests_total',
   help: 'Total number of HTTP requests',
   labelNames: ['method', 'route', 'status_code', 'environment'],
-  registers: [register]
+  registers: [register],
 });
 
 const httpRequestDuration = new client.Histogram({
@@ -26,14 +26,14 @@ const httpRequestDuration = new client.Histogram({
   help: 'Duration of HTTP requests in seconds',
   labelNames: ['method', 'route', 'status_code', 'environment'],
   buckets: [0.1, 0.3, 0.5, 0.7, 1, 3, 5, 7, 10],
-  registers: [register]
+  registers: [register],
 });
 
 const activeConnections = new client.Gauge({
   name: 'scoms_active_connections',
   help: 'Number of active connections',
   labelNames: ['environment'],
-  registers: [register]
+  registers: [register],
 });
 
 // Business metrics
@@ -41,21 +41,21 @@ const ordersTotal = new client.Counter({
   name: 'scoms_orders_total',
   help: 'Total number of orders processed',
   labelNames: ['status', 'warehouse_id', 'environment'],
-  registers: [register]
+  registers: [register],
 });
 
 const warehouseOperations = new client.Counter({
   name: 'scoms_warehouse_operations_total',
   help: 'Total number of warehouse operations',
   labelNames: ['operation', 'warehouse_id', 'environment'],
-  registers: [register]
+  registers: [register],
 });
 
 const databaseConnections = new client.Gauge({
   name: 'scoms_db_connections_active',
   help: 'Number of active database connections',
   labelNames: ['environment'],
-  registers: [register]
+  registers: [register],
 });
 
 // Error metrics
@@ -63,38 +63,38 @@ const applicationErrors = new client.Counter({
   name: 'scoms_errors_total',
   help: 'Total number of application errors',
   labelNames: ['error_type', 'severity', 'environment'],
-  registers: [register]
+  registers: [register],
 });
 
 // Middleware to collect HTTP metrics
 export const metricsMiddleware = (req: Request, res: Response, next: NextFunction) => {
   const start = Date.now();
-  
+
   // Increment active connections
   activeConnections.inc({ environment });
 
   res.on('finish', () => {
     const duration = (Date.now() - start) / 1000;
     const route = req.route?.path || req.path;
-    
+
     // Record metrics
     httpRequestsTotal.inc({
       method: req.method,
       route,
       status_code: res.statusCode.toString(),
-      environment
+      environment,
     });
-    
+
     httpRequestDuration.observe(
       {
         method: req.method,
         route,
         status_code: res.statusCode.toString(),
-        environment
+        environment,
       },
-      duration
+      duration,
     );
-    
+
     // Decrement active connections
     activeConnections.dec({ environment });
   });

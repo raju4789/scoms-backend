@@ -7,7 +7,7 @@ import logger from '../utils/logger';
  * This creates middleware that validates request data using provided validation functions
  */
 export function validateRequest<T>(
-  validationFn: (data: any) => T,
+  validationFn: (data: unknown) => T,
   source: 'body' | 'params' | 'query' = 'body',
 ) {
   return (req: Request, res: Response, next: NextFunction): void => {
@@ -24,7 +24,7 @@ export function validateRequest<T>(
       );
 
       // Perform validation
-      const validatedData = validationFn(dataToValidate);
+      const validatedData = validationFn(dataToValidate as unknown);
 
       // Store validated data back to request object
       req[source] = validatedData;
@@ -97,7 +97,7 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
   // Remove common potentially dangerous fields
   const dangerousFields = ['__proto__', 'constructor', 'prototype'];
 
-  const sanitizeObject = (obj: any): any => {
+  const sanitizeObject = (obj: unknown): unknown => {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
@@ -106,7 +106,7 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
       return obj.map(sanitizeObject);
     }
 
-    const sanitized: any = {};
+    const sanitized: Record<string, unknown> = {};
     for (const [key, value] of Object.entries(obj)) {
       if (!dangerousFields.includes(key)) {
         sanitized[key] = sanitizeObject(value);
@@ -120,7 +120,7 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
   }
 
   if (req.query) {
-    req.query = sanitizeObject(req.query);
+    req.query = sanitizeObject(req.query) as import('qs').ParsedQs;
   }
 
   next();
