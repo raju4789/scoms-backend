@@ -752,6 +752,7 @@ describe('Validation Middleware', () => {
 
     describe('No Body or Query', () => {
       it('should handle requests with no body or query', () => {
+        
         // Arrange
         delete req.body;
         delete req.query;
