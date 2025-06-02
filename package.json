@@ -17,6 +17,7 @@
     "// Utility": "====================================",
     "open:consul": "bash scripts/open-consul-ui.sh",
     "test": "jest",
+    "test:coverage": "jest --coverage",
     "lint": "eslint . --fix",
     "lint:check": "eslint .",
     "format": "prettier --write .",
