@@ -20,7 +20,7 @@ jobs:
   # Code Quality & Security Checks
   # ==========================================
   code-quality:
-    name: 🔍 Code Quality & Security
+    name: 🔍 Code Quality and Security
     runs-on: ubuntu-latest
     
     steps:
