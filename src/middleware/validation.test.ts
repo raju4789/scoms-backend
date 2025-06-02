@@ -1,12 +1,3 @@
-/**
- * Validation Middleware Tests
- *
- * Comprehensive test suite for validation middleware functions including:
- * - validateRequest factory function
- * - validateRequestFormat middleware
- * - sanitizeRequest middleware
- */
-
 import { NextFunction, Request, Response } from 'express';
 import { sanitizeRequest, validateRequest, validateRequestFormat } from './validation';
 import { ValidationError } from '../errors/ErrorTypes';
