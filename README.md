@@ -2,13 +2,7 @@
 
 ## Project Overview
 
-The **ScreenCloud Order Management System (SCOMS) Backend** is a production-ready, enterprise-grade microservice designed to handle complex order fulfillment workflows for device distribution. Built with modern TypeScript and Node.js, this system demonst```bash
-# Run tests
-npm test
-
-# Run tests with coverage
-npm test -- --coverage
-```dvanced software engineering practices including microservices architecture, distributed configuration management, and comprehensive observability.
+The **ScreenCloud Order Management System (SCOMS) Backend** is a production-ready, enterprise-grade microservice designed to handle complex order fulfillment workflows for device distribution. Built with modern TypeScript and Node.js, this system demonstrates advanced software engineering practices including microservices architecture, distributed configuration management, and comprehensive observability.
 
 ### What Makes SCOMS Special?
 
@@ -163,13 +157,45 @@ src/
 ### Installation
 ```bash
 # Clone the repository
-git clone https://github.com/your-org/scoms-backend.git
+git clone <repository-url>
 cd scoms-backend
 
 # Install dependencies
 npm ci
-
 ```
+
+## Environment Variables
+
+Before running the application, you'll need to set up the following environment variables. You can create a `.env` file in the root directory:
+
+```bash
+# Database Configuration
+DB_HOST=localhost
+DB_PORT=5432
+DB_USERNAME=postgres
+DB_PASSWORD=postgres
+DB_NAME=scoms
+DB_SSL=false
+
+# Consul Configuration
+CONSUL_HOST=localhost
+CONSUL_PORT=8500
+
+# Application Configuration
+NODE_ENV=development
+PORT=3000
+LOG_LEVEL=info
+
+# Device Configuration (optional - defaults provided)
+DEVICE_PRICE=150
+DEVICE_WEIGHT_KG=0.365
+SHIPPING_RATE_PER_KG_KM=0.01
+SHIPPING_COST_THRESHOLD_PERCENT=0.15
+```
+
+## Database & Consul Setup
+
+The SCOMS backend requires PostgreSQL and HashiCorp Consul to be running. These dependencies are managed through Docker Compose for easy setup and consistent environments.
 
 **Services:**
 - **PostgreSQL**: `localhost:5432`
@@ -182,14 +208,16 @@ npm ci
 # Start dependencies
 npm run docker:dev
 
-# OR start coding with hot-reload
+# Start server with hot reload
 npm run dev:watch
+
+# Or start server without hot reload
+npm run dev
 ```
 
 ### Production Mode
 ```bash
-
-# Start dependencies
+# Start all services including the application
 npm run docker:prod
 ```
 
@@ -271,11 +299,11 @@ curl -H "x-api-key: scoms-frontend-key" \
 - `GET /metrics` - Prometheus metrics endpoint
 
 ### Order Pricing Logic
-- **Base Price**: $100 per device
+- **Base Price**: $150 per device (configurable via Consul)
 - **Bulk Discounts**:
-  - 10-24 devices: 5% discount
-  - 25-49 devices: 10% discount
-  - 50+ devices: 15% discount
+  - 25-49 devices: 5% discount
+  - 50-99 devices: 10% discount
+  - 100+ devices: 15% discount
 - **Shipping**: Distance-based from nearest warehouse
 - **Shipping Cap**: Maximum 15% of order total (after discount)
 
@@ -426,25 +454,29 @@ Sample HTTP requests are available in the `rest-client/` directory:
 
 #### Database Connection Errors
 ```bash
-# For production environment
-npm run docker:logs
+# Check if PostgreSQL is running
+docker ps | grep postgres
+
+# Restart database container
+docker-compose restart postgres
+
+# Check database logs
+docker-compose logs postgres
 ```
 
-Analyze configuration:
-
+#### Consul Connection Issues
 ```bash
-# View all configurations
-npm run analyze-consul
+# Check Consul status
+curl http://localhost:8500/v1/status/leader
 
-# View development configuration only
-npm run analyze-consul:dev
+# Restart Consul
+docker-compose restart consul
 
-# View production configuration only
-npm run analyze-consul:prod
+# Access Consul UI
+open http://localhost:8500/ui
 ```
 
-## 🧹 Cleanup
-
+#### Port Conflicts
 ```bash
 # Check what's using port 3000
 lsof -i :3000
