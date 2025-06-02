@@ -11,6 +11,7 @@ import authService from './services/authService';
 import routes from './routes';
 import { runInitialDataLoad } from './utils/dbBootstrap';
 import { preloadConsulConfig } from './utils/consulBootstrap';
+import { setupSwagger } from './config/swagger';
 
 // Load environment variables from .env file
 dotenv.config();
@@ -84,6 +85,9 @@ async function bootstrap() {
     // 8.1. Metrics endpoint
     app.get('/metrics', metricsHandler);
 
+    // 8.2. Setup Swagger documentation
+    setupSwagger(app);
+
     // 9. API routes (authentication middleware is applied per route group)
     app.use('/api/v1', routes);
 
@@ -94,6 +98,8 @@ async function bootstrap() {
         version: '1.0.0',
         environment: process.env.NODE_ENV,
         consulUI: 'http://localhost:8500/ui/',
+        documentation: `http://localhost:${port}/api-docs`,
+        apiBase: `http://localhost:${port}/api/v1`,
       });
     });
 
@@ -107,6 +113,7 @@ async function bootstrap() {
         environment: process.env.NODE_ENV,
         consulUI: 'http://localhost:8500/ui/',
         apiBase: `http://localhost:${port}/api/v1`,
+        documentation: `http://localhost:${port}/api-docs`,
       });
     });
 

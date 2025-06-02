@@ -10,7 +10,41 @@ import logger from '../utils/logger';
 const router = Router();
 
 /**
- * Basic health check endpoint
+ * @swagger
+ * /health:
+ *   get:
+ *     summary: Basic health check
+ *     description: |
+ *       Performs a basic health check of the SCOMS service. This endpoint provides
+ *       a quick overview of service status without detailed dependency checks.
+ *       Ideal for load balancer health checks and basic monitoring.
+ *     tags: [Health]
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Service is healthy
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/HealthStatus'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 status: "healthy"
+ *                 timestamp: "2025-06-02T12:00:00.000Z"
+ *                 correlationId: "123e4567-e89b-12d3-a456-426614174000"
+ *                 service: "SCOMS Backend"
+ *                 version: "1.0.0"
+ *                 environment: "development"
+ *               errorDetails: null
+ *       500:
+ *         $ref: '#/components/responses/500'
  */
 router.get(
   '/health',
@@ -29,7 +63,96 @@ router.get(
 );
 
 /**
- * Detailed health check with dependencies
+ * @swagger
+ * /health/detailed:
+ *   get:
+ *     summary: Detailed health check with dependencies
+ *     description: |
+ *       Performs a comprehensive health check including all service dependencies
+ *       and system metrics. This endpoint provides detailed information about:
+ *       
+ *       - **Database connectivity** and response times
+ *       - **Consul configuration service** status  
+ *       - **Error metrics** and service health trends
+ *       - **System resources** (memory, CPU, uptime)
+ *       - **Overall service status** based on all dependencies
+ *       
+ *       ## Health Status Levels
+ *       - **healthy**: All systems operational
+ *       - **degraded**: Some systems experiencing issues but service functional
+ *       - **unhealthy**: Critical systems down, service may be impaired
+ *     tags: [Health]
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Detailed health information (service may be degraded)
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/DetailedHealthStatus'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 status: "healthy"
+ *                 timestamp: "2025-06-02T12:00:00.000Z"
+ *                 correlationId: "123e4567-e89b-12d3-a456-426614174000"
+ *                 service: "SCOMS Backend"
+ *                 version: "1.0.0"
+ *                 environment: "development"
+ *                 responseTime: 45
+ *                 dependencies:
+ *                   database:
+ *                     status: "healthy"
+ *                     latency: 12
+ *                     type: "PostgreSQL"
+ *                   consul:
+ *                     status: "healthy"
+ *                     latency: 8
+ *                     type: "Configuration Management"
+ *                 metrics:
+ *                   errors:
+ *                     healthStatus: "healthy"
+ *                     totalErrors: 0
+ *                     errorRate: 0.0
+ *                   uptime: 86400.5
+ *                   memory:
+ *                     used: 45
+ *                     total: 128
+ *                     external: 12
+ *                   cpu:
+ *                     user: 156789
+ *                     system: 45632
+ *               errorDetails: null
+ *       503:
+ *         description: Service is unhealthy - critical dependencies unavailable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/DetailedHealthStatus'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 status: "unhealthy"
+ *                 timestamp: "2025-06-02T12:00:00.000Z"
+ *                 dependencies:
+ *                   database:
+ *                     status: "unhealthy"
+ *                     latency: 0
+ *                     type: "PostgreSQL"
+ *               errorDetails: null
+ *       500:
+ *         $ref: '#/components/responses/500'
  */
 router.get(
   '/health/detailed',
@@ -130,7 +253,66 @@ router.get(
 );
 
 /**
- * Readiness probe for Kubernetes
+ * @swagger
+ * /ready:
+ *   get:
+ *     summary: Kubernetes readiness probe
+ *     description: |
+ *       Kubernetes readiness probe endpoint that checks if the service is ready to accept traffic.
+ *       This endpoint specifically validates database connectivity as it's critical for service operation.
+ *       
+ *       ## Readiness vs Liveness
+ *       - **Readiness**: Can the service handle requests? (this endpoint)
+ *       - **Liveness**: Is the service running? (see /live endpoint)
+ *       
+ *       Kubernetes will remove the pod from service if readiness fails.
+ *     tags: [Health]
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Service is ready to accept traffic
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "ready"
+ *                   description: "Ready status indicator"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-06-02T12:00:00.000Z"
+ *                   description: "Check timestamp"
+ *             example:
+ *               status: "ready"
+ *               timestamp: "2025-06-02T12:00:00.000Z"
+ *       503:
+ *         description: Service is not ready - database unavailable
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "not ready"
+ *                   description: "Not ready status indicator"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-06-02T12:00:00.000Z"
+ *                   description: "Check timestamp"
+ *                 reason:
+ *                   type: string
+ *                   example: "Database not available"
+ *                   description: "Reason for not being ready"
+ *             example:
+ *               status: "not ready"
+ *               timestamp: "2025-06-02T12:00:00.000Z"
+ *               reason: "Database not available"
  */
 router.get(
   '/ready',
@@ -156,7 +338,42 @@ router.get(
 );
 
 /**
- * Liveness probe for Kubernetes
+ * @swagger
+ * /live:
+ *   get:
+ *     summary: Kubernetes liveness probe
+ *     description: |
+ *       Kubernetes liveness probe endpoint that indicates whether the service is running.
+ *       This is a simple endpoint that always returns success if the process is alive.
+ *       
+ *       ## Liveness vs Readiness
+ *       - **Liveness**: Is the service running? (this endpoint)
+ *       - **Readiness**: Can the service handle requests? (see /ready endpoint)
+ *       
+ *       Kubernetes will restart the pod if liveness fails.
+ *     tags: [Health]
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Service is alive and running
+ *         content:
+ *           application/json:
+ *             schema:
+ *               type: object
+ *               properties:
+ *                 status:
+ *                   type: string
+ *                   example: "alive"
+ *                   description: "Alive status indicator"
+ *                 timestamp:
+ *                   type: string
+ *                   format: date-time
+ *                   example: "2025-06-02T12:00:00.000Z"
+ *                   description: "Check timestamp"
+ *             example:
+ *               status: "alive"
+ *               timestamp: "2025-06-02T12:00:00.000Z"
  */
 router.get('/live', (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({

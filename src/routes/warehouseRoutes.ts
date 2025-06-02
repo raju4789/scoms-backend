@@ -13,7 +13,62 @@ import { AuthenticatedRequest } from '../types/AuthTypes';
 
 const router = Router();
 
-// GET /warehouses
+/**
+ * @swagger
+ * /warehouses:
+ *   get:
+ *     summary: Get all warehouses
+ *     description: |
+ *       Retrieves a list of all warehouses in the system with their current inventory levels
+ *       and location information. This endpoint is useful for:
+ *       - Displaying warehouse locations on a map
+ *       - Checking inventory levels across facilities
+ *       - Planning order fulfillment strategies
+ *     tags: [Warehouses]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved warehouses
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: array
+ *                       items:
+ *                         $ref: '#/components/schemas/Warehouse'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 - id: 1
+ *                   name: "New York Distribution Center"
+ *                   latitude: 40.7128
+ *                   longitude: -74.0060
+ *                   stock: 1500
+ *                 - id: 2
+ *                   name: "Los Angeles Warehouse"
+ *                   latitude: 34.0522
+ *                   longitude: -118.2437
+ *                   stock: 2200
+ *                 - id: 3
+ *                   name: "Chicago Hub"
+ *                   latitude: 41.8781
+ *                   longitude: -87.6298
+ *                   stock: 1800
+ *               errorDetails: null
+ *       401:
+ *         $ref: '#/components/responses/401'
+ *       403:
+ *         $ref: '#/components/responses/403'
+ *       500:
+ *         $ref: '#/components/responses/500'
+ */
 router.get(
   '/',
   authMiddleware,
@@ -24,7 +79,83 @@ router.get(
   }),
 );
 
-// GET /warehouses/:id
+/**
+ * @swagger
+ * /warehouses/{id}:
+ *   get:
+ *     summary: Get warehouse by ID
+ *     description: |
+ *       Retrieves detailed information about a specific warehouse including its
+ *       current inventory levels and precise location coordinates.
+ *     tags: [Warehouses]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Unique warehouse identifier
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Successfully retrieved warehouse
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Warehouse'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 id: 1
+ *                 name: "New York Distribution Center"
+ *                 latitude: 40.7128
+ *                 longitude: -74.0060
+ *                 stock: 1500
+ *               errorDetails: null
+ *       400:
+ *         description: Invalid warehouse ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               isSuccess: false
+ *               data: null
+ *               errorDetails:
+ *                 errorCode: 400
+ *                 errorMessage: "Warehouse ID must be a positive integer"
+ *                 category: "validation"
+ *                 severity: "low"
+ *       401:
+ *         $ref: '#/components/responses/401'
+ *       403:
+ *         $ref: '#/components/responses/403'
+ *       404:
+ *         description: Warehouse not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               isSuccess: false
+ *               data: null
+ *               errorDetails:
+ *                 errorCode: 404
+ *                 errorMessage: "Warehouse with identifier '999' not found"
+ *                 category: "not_found"
+ *                 severity: "low"
+ *       500:
+ *         $ref: '#/components/responses/500'
+ */
 router.get(
   '/:id',
   authMiddleware,
@@ -37,7 +168,105 @@ router.get(
   }),
 );
 
-// POST /warehouses
+/**
+ * @swagger
+ * /warehouses:
+ *   post:
+ *     summary: Create a new warehouse
+ *     description: |
+ *       Creates a new warehouse facility in the system. The warehouse name must be unique
+ *       across all facilities. Location coordinates should be precise to ensure accurate
+ *       shipping cost calculations.
+ *       
+ *       ## Validation Rules
+ *       - **Name**: Must be unique, 1-100 characters, trimmed of whitespace
+ *       - **Latitude**: Must be between -90 and 90 degrees
+ *       - **Longitude**: Must be between -180 and 180 degrees  
+ *       - **Stock**: Must be non-negative integer, maximum 100,000 units
+ *     tags: [Warehouses]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/CreateWarehouseInput'
+ *           examples:
+ *             new_warehouse:
+ *               summary: Standard warehouse creation
+ *               value:
+ *                 name: "Miami Distribution Center"
+ *                 latitude: 25.7617
+ *                 longitude: -80.1918
+ *                 stock: 1000
+ *             large_warehouse:
+ *               summary: Large capacity warehouse
+ *               value:
+ *                 name: "Texas Mega Hub"
+ *                 latitude: 29.7604
+ *                 longitude: -95.3698
+ *                 stock: 5000
+ *     responses:
+ *       200:
+ *         description: Warehouse successfully created
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Warehouse'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 id: 4
+ *                 name: "Miami Distribution Center"
+ *                 latitude: 25.7617
+ *                 longitude: -80.1918
+ *                 stock: 1000
+ *               errorDetails: null
+ *       400:
+ *         description: Invalid input or validation failure
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: Input validation failed
+ *                 value:
+ *                   isSuccess: false
+ *                   data: null
+ *                   errorDetails:
+ *                     errorCode: 400
+ *                     errorMessage: "Warehouse validation failed"
+ *                     category: "validation"
+ *                     severity: "low"
+ *                     details:
+ *                       name: "Name is required and must be unique"
+ *                       latitude: "Latitude must be between -90 and 90"
+ *               duplicate_name:
+ *                 summary: Warehouse name already exists
+ *                 value:
+ *                   isSuccess: false
+ *                   data: null
+ *                   errorDetails:
+ *                     errorCode: 400
+ *                     errorMessage: "Warehouse name 'New York Distribution Center' already exists"
+ *                     category: "business_logic"
+ *                     severity: "medium"
+ *       401:
+ *         $ref: '#/components/responses/401'
+ *       403:
+ *         $ref: '#/components/responses/403'
+ *       500:
+ *         $ref: '#/components/responses/500'
+ */
 router.post(
   '/',
   authMiddleware,
@@ -51,7 +280,133 @@ router.post(
   }),
 );
 
-// PUT /warehouses/:id
+/**
+ * @swagger
+ * /warehouses/{id}:
+ *   put:
+ *     summary: Update warehouse information
+ *     description: |
+ *       Updates an existing warehouse with new information. All fields are optional,
+ *       but at least one field must be provided. The warehouse name must remain unique
+ *       if updated.
+ *       
+ *       ## Updatable Fields
+ *       - **name**: Warehouse display name (must be unique)
+ *       - **latitude**: Latitude coordinate (-90 to 90)
+ *       - **longitude**: Longitude coordinate (-180 to 180)
+ *       - **stock**: Current inventory level (0 to 100,000)
+ *       
+ *       ## Common Use Cases
+ *       - **Stock Adjustments**: Update inventory after receiving shipments
+ *       - **Location Corrections**: Fix GPS coordinates for better accuracy
+ *       - **Facility Rebranding**: Update warehouse names
+ *     tags: [Warehouses]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Unique warehouse identifier
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 1
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     requestBody:
+ *       required: true
+ *       content:
+ *         application/json:
+ *           schema:
+ *             $ref: '#/components/schemas/UpdateWarehouseInput'
+ *           examples:
+ *             stock_update:
+ *               summary: Update inventory levels only
+ *               value:
+ *                 stock: 2500
+ *             location_update:
+ *               summary: Update warehouse coordinates
+ *               value:
+ *                 latitude: 40.7589
+ *                 longitude: -73.9851
+ *             full_update:
+ *               summary: Update multiple fields
+ *               value:
+ *                 name: "Manhattan Distribution Hub"
+ *                 latitude: 40.7589
+ *                 longitude: -73.9851
+ *                 stock: 3000
+ *     responses:
+ *       200:
+ *         description: Warehouse successfully updated
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       $ref: '#/components/schemas/Warehouse'
+ *             example:
+ *               isSuccess: true
+ *               data:
+ *                 id: 1
+ *                 name: "Manhattan Distribution Hub"
+ *                 latitude: 40.7589
+ *                 longitude: -73.9851
+ *                 stock: 3000
+ *               errorDetails: null
+ *       400:
+ *         description: Invalid input or validation failure
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             examples:
+ *               validation_error:
+ *                 summary: Input validation failed
+ *                 value:
+ *                   isSuccess: false
+ *                   data: null
+ *                   errorDetails:
+ *                     errorCode: 400
+ *                     errorMessage: "Warehouse update validation failed"
+ *                     category: "validation"
+ *                     severity: "low"
+ *                     details:
+ *                       stock: "Stock must be a non-negative number"
+ *               no_fields:
+ *                 summary: No fields provided for update
+ *                 value:
+ *                   isSuccess: false
+ *                   data: null
+ *                   errorDetails:
+ *                     errorCode: 400
+ *                     errorMessage: "At least one field must be provided for update"
+ *                     category: "validation"
+ *                     severity: "low"
+ *       401:
+ *         $ref: '#/components/responses/401'
+ *       403:
+ *         $ref: '#/components/responses/403'
+ *       404:
+ *         description: Warehouse not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               isSuccess: false
+ *               data: null
+ *               errorDetails:
+ *                 errorCode: 404
+ *                 errorMessage: "Warehouse with identifier '999' not found"
+ *                 category: "not_found"
+ *                 severity: "low"
+ *       500:
+ *         $ref: '#/components/responses/500'
+ */
 router.put(
   '/:id',
   authMiddleware,
@@ -67,7 +422,88 @@ router.put(
   }),
 );
 
-// DELETE /warehouses/:id
+/**
+ * @swagger
+ * /warehouses/{id}:
+ *   delete:
+ *     summary: Delete a warehouse
+ *     description: |
+ *       Permanently removes a warehouse from the system. This operation cannot be undone.
+ *       
+ *       ## Important Considerations
+ *       - **Inventory Loss**: Any remaining stock will be permanently lost
+ *       - **Order Impact**: Active orders allocated to this warehouse may be affected
+ *       - **Historical Data**: Past orders referencing this warehouse will retain historical allocation data
+ *       
+ *       ## Safety Recommendations
+ *       1. Transfer inventory to other warehouses before deletion
+ *       2. Ensure no pending orders are allocated to this facility
+ *       3. Consider archiving instead of deletion for audit purposes
+ *     tags: [Warehouses]
+ *     security:
+ *       - ApiKeyAuth: []
+ *     parameters:
+ *       - name: id
+ *         in: path
+ *         required: true
+ *         description: Unique warehouse identifier
+ *         schema:
+ *           type: integer
+ *           minimum: 1
+ *           example: 999
+ *       - $ref: '#/components/parameters/CorrelationId'
+ *     responses:
+ *       200:
+ *         description: Warehouse successfully deleted
+ *         content:
+ *           application/json:
+ *             schema:
+ *               allOf:
+ *                 - $ref: '#/components/schemas/SuccessResponse'
+ *                 - type: object
+ *                   properties:
+ *                     data:
+ *                       type: 'null'
+ *                       description: 'No data returned for successful deletion'
+ *             example:
+ *               isSuccess: true
+ *               data: null
+ *               errorDetails: null
+ *       400:
+ *         description: Invalid warehouse ID
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               isSuccess: false
+ *               data: null
+ *               errorDetails:
+ *                 errorCode: 400
+ *                 errorMessage: "Warehouse ID must be a positive integer"
+ *                 category: "validation"
+ *                 severity: "low"
+ *       401:
+ *         $ref: '#/components/responses/401'
+ *       403:
+ *         $ref: '#/components/responses/403'
+ *       404:
+ *         description: Warehouse not found
+ *         content:
+ *           application/json:
+ *             schema:
+ *               $ref: '#/components/schemas/ErrorResponse'
+ *             example:
+ *               isSuccess: false
+ *               data: null
+ *               errorDetails:
+ *                 errorCode: 404
+ *                 errorMessage: "Warehouse with identifier '999' not found"
+ *                 category: "not_found"
+ *                 severity: "low"
+ *       500:
+ *         $ref: '#/components/responses/500'
+ */
 router.delete(
   '/:id',
   authMiddleware,
