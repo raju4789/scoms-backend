@@ -81,7 +81,7 @@ export function validateRequestFormat(req: Request, res: Response, next: NextFun
       return next(new ValidationError('Content-Type header is required'));
     }
 
-    if (!contentType.includes('application/json')) {
+    if (!contentType.toLowerCase().includes('application/json')) {
       logger.warn({ correlationId: req.correlationId, contentType }, 'Invalid content type');
       return next(new ValidationError('Content-Type must be application/json'));
     }
@@ -97,19 +97,30 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
   // Remove common potentially dangerous fields
   const dangerousFields = ['__proto__', 'constructor', 'prototype'];
 
-  const sanitizeObject = (obj: unknown): unknown => {
+  const sanitizeObject = (obj: unknown, seen = new WeakSet()): unknown => {
     if (obj === null || typeof obj !== 'object') {
       return obj;
     }
 
+    // Handle circular references
+    if (seen.has(obj as object)) {
+      return {};
+    }
+    seen.add(obj as object);
+
     if (Array.isArray(obj)) {
-      return obj.map(sanitizeObject);
+      return obj.map((item) => sanitizeObject(item, seen));
+    }
+
+    // Handle Date objects specifically
+    if (obj instanceof Date) {
+      return obj;
     }
 
     const sanitized: Record<string, unknown> = {};
-    for (const [key, value] of Object.entries(obj)) {
+    for (const [key, value] of Object.entries(obj as Record<string, unknown>)) {
       if (!dangerousFields.includes(key)) {
-        sanitized[key] = sanitizeObject(value);
+        sanitized[key] = sanitizeObject(value, seen);
       }
     }
     return sanitized;

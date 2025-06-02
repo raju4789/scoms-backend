@@ -8,6 +8,7 @@ const config: Config.InitialOptions = {
     '<rootDir>/src/services',
     '<rootDir>/src/utils',
     '<rootDir>/src/routes',
+    '<rootDir>/src/middleware',
   ],
   moduleFileExtensions: ['ts', 'js', 'json'],
   testMatch: ['**/*.test.ts'],
