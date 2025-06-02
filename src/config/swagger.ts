@@ -1,7 +1,7 @@
 import swaggerJsdoc from 'swagger-jsdoc';
 import swaggerUi from 'swagger-ui-express';
 import { Express } from 'express';
-import { StatusCodes } from 'http-status-codes';
+import logger from '../utils/logger';
 
 /**
  * Swagger configuration using OpenAPI 3.0.3 specification
@@ -72,27 +72,27 @@ API requests are subject to rate limiting. Monitor the following headers:
       contact: {
         name: 'SCOMS API Support',
         email: 'api-support@screencloud.com',
-        url: 'https://docs.screencloud.com/scoms'
+        url: 'https://docs.screencloud.com/scoms',
       },
       license: {
         name: 'MIT',
-        url: 'https://opensource.org/licenses/MIT'
+        url: 'https://opensource.org/licenses/MIT',
       },
-      termsOfService: 'https://screencloud.com/terms'
+      termsOfService: 'https://screencloud.com/terms',
     },
     servers: [
       {
         url: 'http://localhost:3000/api/v1',
-        description: 'Development server'
+        description: 'Development server',
       },
       {
         url: 'https://staging-api.screencloud.com/scoms/v1',
-        description: 'Staging server'
+        description: 'Staging server',
       },
       {
         url: 'https://api.screencloud.com/scoms/v1',
-        description: 'Production server'
-      }
+        description: 'Production server',
+      },
     ],
     components: {
       securitySchemes: {
@@ -100,8 +100,9 @@ API requests are subject to rate limiting. Monitor the following headers:
           type: 'http',
           scheme: 'bearer',
           bearerFormat: 'API-Key',
-          description: 'API key-based authentication. Obtain your API key from the SCOMS dashboard.'
-        }
+          description:
+            'API key-based authentication. Obtain your API key from the SCOMS dashboard.',
+        },
       },
       schemas: {
         // Common response schemas
@@ -111,17 +112,17 @@ API requests are subject to rate limiting. Monitor the following headers:
             isSuccess: {
               type: 'boolean',
               example: true,
-              description: 'Indicates if the request was successful'
+              description: 'Indicates if the request was successful',
             },
             data: {
-              description: 'The response payload'
+              description: 'The response payload',
             },
             errorDetails: {
               type: 'null',
-              description: 'Always null for successful responses'
-            }
+              description: 'Always null for successful responses',
+            },
           },
-          required: ['isSuccess', 'data', 'errorDetails']
+          required: ['isSuccess', 'data', 'errorDetails'],
         },
         ErrorResponse: {
           type: 'object',
@@ -129,11 +130,11 @@ API requests are subject to rate limiting. Monitor the following headers:
             isSuccess: {
               type: 'boolean',
               example: false,
-              description: 'Always false for error responses'
+              description: 'Always false for error responses',
             },
             data: {
               type: 'null',
-              description: 'Always null for error responses'
+              description: 'Always null for error responses',
             },
             errorDetails: {
               type: 'object',
@@ -141,64 +142,83 @@ API requests are subject to rate limiting. Monitor the following headers:
                 errorCode: {
                   type: 'integer',
                   example: 400,
-                  description: 'HTTP status code'
+                  description: 'HTTP status code',
                 },
                 errorMessage: {
                   type: 'string',
                   example: 'Validation failed',
-                  description: 'Human-readable error message'
+                  description: 'Human-readable error message',
                 },
                 errorId: {
                   type: 'string',
                   format: 'uuid',
                   example: '123e4567-e89b-12d3-a456-426614174000',
-                  description: 'Unique identifier for this error instance'
+                  description: 'Unique identifier for this error instance',
                 },
                 correlationId: {
                   type: 'string',
                   format: 'uuid',
                   example: '987fcdeb-51e2-43d1-b456-426614174000',
-                  description: 'Request correlation ID for tracing'
+                  description: 'Request correlation ID for tracing',
                 },
                 category: {
                   type: 'string',
-                  enum: ['validation', 'authentication', 'authorization', 'not_found', 'business_logic', 'external_service', 'database', 'network', 'system', 'unknown'],
+                  enum: [
+                    'validation',
+                    'authentication',
+                    'authorization',
+                    'not_found',
+                    'business_logic',
+                    'external_service',
+                    'database',
+                    'network',
+                    'system',
+                    'unknown',
+                  ],
                   example: 'validation',
-                  description: 'Error category for classification'
+                  description: 'Error category for classification',
                 },
                 severity: {
                   type: 'string',
                   enum: ['low', 'medium', 'high', 'critical'],
                   example: 'low',
-                  description: 'Error severity level'
+                  description: 'Error severity level',
                 },
                 timestamp: {
                   type: 'string',
                   format: 'date-time',
                   example: '2025-06-02T12:00:00.000Z',
-                  description: 'Error occurrence timestamp'
+                  description: 'Error occurrence timestamp',
                 },
                 details: {
                   type: 'object',
                   additionalProperties: true,
-                  description: 'Additional error context and details'
+                  description: 'Additional error context and details',
                 },
                 retryable: {
                   type: 'boolean',
                   example: false,
-                  description: 'Whether the request can be retried'
+                  description: 'Whether the request can be retried',
                 },
                 helpUrl: {
                   type: 'string',
                   format: 'uri',
                   example: 'https://docs.screencloud.com/scoms/errors/validation',
-                  description: 'URL with more information about this error'
-                }
+                  description: 'URL with more information about this error',
+                },
               },
-              required: ['errorCode', 'errorMessage', 'errorId', 'correlationId', 'category', 'severity', 'timestamp']
-            }
+              required: [
+                'errorCode',
+                'errorMessage',
+                'errorId',
+                'correlationId',
+                'category',
+                'severity',
+                'timestamp',
+              ],
+            },
           },
-          required: ['isSuccess', 'data', 'errorDetails']
+          required: ['isSuccess', 'data', 'errorDetails'],
         },
 
         // Order schemas
@@ -209,14 +229,14 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'string',
               format: 'uuid',
               example: '123e4567-e89b-12d3-a456-426614174000',
-              description: 'Unique order identifier'
+              description: 'Unique order identifier',
             },
             quantity: {
               type: 'integer',
               minimum: 1,
               maximum: 10000,
               example: 25,
-              description: 'Number of devices ordered'
+              description: 'Number of devices ordered',
             },
             shipping_latitude: {
               type: 'number',
@@ -224,52 +244,62 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -90,
               maximum: 90,
               example: 40.7128,
-              description: 'Latitude of shipping destination'
+              description: 'Latitude of shipping destination',
             },
             shipping_longitude: {
               type: 'number',
               format: 'float',
               minimum: -180,
               maximum: 180,
-              example: -74.0060,
-              description: 'Longitude of shipping destination'
+              example: -74.006,
+              description: 'Longitude of shipping destination',
             },
             total_price: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 2375.00,
-              description: 'Final total price after discount, before shipping'
+              example: 2375.0,
+              description: 'Final total price after discount, before shipping',
             },
             discount: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 125.00,
-              description: 'Discount amount applied to the order'
+              example: 125.0,
+              description: 'Discount amount applied to the order',
             },
             shipping_cost: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 35.50,
-              description: 'Shipping cost for the order'
+              example: 35.5,
+              description: 'Shipping cost for the order',
             },
             warehouse_allocation: {
               type: 'array',
               items: {
-                $ref: '#/components/schemas/WarehouseAllocation'
+                $ref: '#/components/schemas/WarehouseAllocation',
               },
-              description: 'How the order is allocated across warehouses'
+              description: 'How the order is allocated across warehouses',
             },
             created_at: {
               type: 'string',
               format: 'date-time',
               example: '2025-06-02T12:00:00.000Z',
-              description: 'Order creation timestamp'
-            }
+              description: 'Order creation timestamp',
+            },
           },
-          required: ['id', 'quantity', 'shipping_latitude', 'shipping_longitude', 'total_price', 'discount', 'shipping_cost', 'warehouse_allocation', 'created_at']
+          required: [
+            'id',
+            'quantity',
+            'shipping_latitude',
+            'shipping_longitude',
+            'total_price',
+            'discount',
+            'shipping_cost',
+            'warehouse_allocation',
+            'created_at',
+          ],
         },
         OrderInput: {
           type: 'object',
@@ -279,7 +309,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: 1,
               maximum: 10000,
               example: 25,
-              description: 'Number of devices to order'
+              description: 'Number of devices to order',
             },
             shipping_latitude: {
               type: 'number',
@@ -287,19 +317,19 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -90,
               maximum: 90,
               example: 40.7128,
-              description: 'Latitude of shipping destination'
+              description: 'Latitude of shipping destination',
             },
             shipping_longitude: {
               type: 'number',
               format: 'float',
               minimum: -180,
               maximum: 180,
-              example: -74.0060,
-              description: 'Longitude of shipping destination'
-            }
+              example: -74.006,
+              description: 'Longitude of shipping destination',
+            },
           },
           required: ['quantity', 'shipping_latitude', 'shipping_longitude'],
-          additionalProperties: false
+          additionalProperties: false,
         },
         OrderVerificationResult: {
           type: 'object',
@@ -307,36 +337,36 @@ API requests are subject to rate limiting. Monitor the following headers:
             isValid: {
               type: 'boolean',
               example: true,
-              description: 'Whether the order can be fulfilled'
+              description: 'Whether the order can be fulfilled',
             },
             totalPrice: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 2375.00,
-              description: 'Total price after discount, before shipping'
+              example: 2375.0,
+              description: 'Total price after discount, before shipping',
             },
             discount: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 125.00,
-              description: 'Discount amount applied'
+              example: 125.0,
+              description: 'Discount amount applied',
             },
             shippingCost: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 35.50,
-              description: 'Calculated shipping cost'
+              example: 35.5,
+              description: 'Calculated shipping cost',
             },
             reason: {
               type: 'string',
               example: 'Insufficient stock available',
-              description: 'Reason why order is invalid (only present when isValid is false)'
-            }
+              description: 'Reason why order is invalid (only present when isValid is false)',
+            },
           },
-          required: ['isValid', 'totalPrice', 'discount', 'shippingCost']
+          required: ['isValid', 'totalPrice', 'discount', 'shippingCost'],
         },
         WarehouseAllocation: {
           type: 'object',
@@ -344,16 +374,16 @@ API requests are subject to rate limiting. Monitor the following headers:
             warehouse: {
               type: 'string',
               example: 'New York Warehouse',
-              description: 'Name of the warehouse'
+              description: 'Name of the warehouse',
             },
             quantity: {
               type: 'integer',
               minimum: 1,
               example: 15,
-              description: 'Quantity allocated from this warehouse'
-            }
+              description: 'Quantity allocated from this warehouse',
+            },
           },
-          required: ['warehouse', 'quantity']
+          required: ['warehouse', 'quantity'],
         },
 
         // Warehouse schemas
@@ -363,14 +393,14 @@ API requests are subject to rate limiting. Monitor the following headers:
             id: {
               type: 'integer',
               example: 1,
-              description: 'Unique warehouse identifier'
+              description: 'Unique warehouse identifier',
             },
             name: {
               type: 'string',
               minLength: 1,
               maxLength: 100,
               example: 'New York Distribution Center',
-              description: 'Warehouse name (must be unique)'
+              description: 'Warehouse name (must be unique)',
             },
             latitude: {
               type: 'number',
@@ -378,25 +408,25 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -90,
               maximum: 90,
               example: 40.7128,
-              description: 'Warehouse latitude coordinate'
+              description: 'Warehouse latitude coordinate',
             },
             longitude: {
               type: 'number',
               format: 'float',
               minimum: -180,
               maximum: 180,
-              example: -74.0060,
-              description: 'Warehouse longitude coordinate'
+              example: -74.006,
+              description: 'Warehouse longitude coordinate',
             },
             stock: {
               type: 'integer',
               minimum: 0,
               maximum: 100000,
               example: 1500,
-              description: 'Number of devices in stock'
-            }
+              description: 'Number of devices in stock',
+            },
           },
-          required: ['id', 'name', 'latitude', 'longitude', 'stock']
+          required: ['id', 'name', 'latitude', 'longitude', 'stock'],
         },
         CreateWarehouseInput: {
           type: 'object',
@@ -406,7 +436,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               minLength: 1,
               maxLength: 100,
               example: 'Chicago Distribution Center',
-              description: 'Warehouse name (must be unique)'
+              description: 'Warehouse name (must be unique)',
             },
             latitude: {
               type: 'number',
@@ -414,7 +444,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -90,
               maximum: 90,
               example: 41.8781,
-              description: 'Warehouse latitude coordinate'
+              description: 'Warehouse latitude coordinate',
             },
             longitude: {
               type: 'number',
@@ -422,18 +452,18 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -180,
               maximum: 180,
               example: -87.6298,
-              description: 'Warehouse longitude coordinate'
+              description: 'Warehouse longitude coordinate',
             },
             stock: {
               type: 'integer',
               minimum: 0,
               maximum: 100000,
               example: 2000,
-              description: 'Initial stock quantity'
-            }
+              description: 'Initial stock quantity',
+            },
           },
           required: ['name', 'latitude', 'longitude', 'stock'],
-          additionalProperties: false
+          additionalProperties: false,
         },
         UpdateWarehouseInput: {
           type: 'object',
@@ -443,7 +473,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               minLength: 1,
               maxLength: 100,
               example: 'Updated Warehouse Name',
-              description: 'New warehouse name (must be unique)'
+              description: 'New warehouse name (must be unique)',
             },
             latitude: {
               type: 'number',
@@ -451,7 +481,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -90,
               maximum: 90,
               example: 41.8781,
-              description: 'New latitude coordinate'
+              description: 'New latitude coordinate',
             },
             longitude: {
               type: 'number',
@@ -459,18 +489,18 @@ API requests are subject to rate limiting. Monitor the following headers:
               minimum: -180,
               maximum: 180,
               example: -87.6298,
-              description: 'New longitude coordinate'
+              description: 'New longitude coordinate',
             },
             stock: {
               type: 'integer',
               minimum: 0,
               maximum: 100000,
               example: 1800,
-              description: 'Updated stock quantity'
-            }
+              description: 'Updated stock quantity',
+            },
           },
           minProperties: 1,
-          additionalProperties: false
+          additionalProperties: false,
         },
 
         // Health schemas
@@ -481,37 +511,37 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'string',
               enum: ['healthy', 'degraded', 'unhealthy'],
               example: 'healthy',
-              description: 'Overall service health status'
+              description: 'Overall service health status',
             },
             timestamp: {
               type: 'string',
               format: 'date-time',
               example: '2025-06-02T12:00:00.000Z',
-              description: 'Health check timestamp'
+              description: 'Health check timestamp',
             },
             correlationId: {
               type: 'string',
               format: 'uuid',
               example: '123e4567-e89b-12d3-a456-426614174000',
-              description: 'Request correlation ID'
+              description: 'Request correlation ID',
             },
             service: {
               type: 'string',
               example: 'SCOMS Backend',
-              description: 'Service name'
+              description: 'Service name',
             },
             version: {
               type: 'string',
               example: '1.0.0',
-              description: 'Service version'
+              description: 'Service version',
             },
             environment: {
               type: 'string',
               example: 'development',
-              description: 'Environment name'
-            }
+              description: 'Environment name',
+            },
           },
-          required: ['status', 'timestamp', 'service', 'version', 'environment']
+          required: ['status', 'timestamp', 'service', 'version', 'environment'],
         },
         DetailedHealthStatus: {
           allOf: [
@@ -522,7 +552,7 @@ API requests are subject to rate limiting. Monitor the following headers:
                 responseTime: {
                   type: 'integer',
                   example: 45,
-                  description: 'Health check response time in milliseconds'
+                  description: 'Health check response time in milliseconds',
                 },
                 dependencies: {
                   type: 'object',
@@ -533,18 +563,18 @@ API requests are subject to rate limiting. Monitor the following headers:
                         status: {
                           type: 'string',
                           enum: ['healthy', 'degraded', 'unhealthy'],
-                          example: 'healthy'
+                          example: 'healthy',
                         },
                         latency: {
                           type: 'integer',
                           example: 12,
-                          description: 'Database response time in milliseconds'
+                          description: 'Database response time in milliseconds',
                         },
                         type: {
                           type: 'string',
-                          example: 'PostgreSQL'
-                        }
-                      }
+                          example: 'PostgreSQL',
+                        },
+                      },
                     },
                     consul: {
                       type: 'object',
@@ -552,32 +582,32 @@ API requests are subject to rate limiting. Monitor the following headers:
                         status: {
                           type: 'string',
                           enum: ['healthy', 'degraded', 'unhealthy'],
-                          example: 'healthy'
+                          example: 'healthy',
                         },
                         latency: {
                           type: 'integer',
                           example: 8,
-                          description: 'Consul response time in milliseconds'
+                          description: 'Consul response time in milliseconds',
                         },
                         type: {
                           type: 'string',
-                          example: 'Configuration Management'
-                        }
-                      }
-                    }
-                  }
+                          example: 'Configuration Management',
+                        },
+                      },
+                    },
+                  },
                 },
                 metrics: {
                   type: 'object',
                   properties: {
                     errors: {
                       type: 'object',
-                      description: 'Error statistics and health metrics'
+                      description: 'Error statistics and health metrics',
                     },
                     uptime: {
                       type: 'number',
                       example: 86400.5,
-                      description: 'Service uptime in seconds'
+                      description: 'Service uptime in seconds',
                     },
                     memory: {
                       type: 'object',
@@ -585,30 +615,30 @@ API requests are subject to rate limiting. Monitor the following headers:
                         used: {
                           type: 'integer',
                           example: 45,
-                          description: 'Used memory in MB'
+                          description: 'Used memory in MB',
                         },
                         total: {
                           type: 'integer',
                           example: 128,
-                          description: 'Total allocated memory in MB'
+                          description: 'Total allocated memory in MB',
                         },
                         external: {
                           type: 'integer',
                           example: 12,
-                          description: 'External memory usage in MB'
-                        }
-                      }
+                          description: 'External memory usage in MB',
+                        },
+                      },
                     },
                     cpu: {
                       type: 'object',
-                      description: 'CPU usage statistics'
-                    }
-                  }
-                }
-              }
-            }
-          ]
-        }
+                      description: 'CPU usage statistics',
+                    },
+                  },
+                },
+              },
+            },
+          ],
+        },
       },
       responses: {
         // Standard HTTP responses
@@ -617,17 +647,17 @@ API requests are subject to rate limiting. Monitor the following headers:
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/SuccessResponse'
-              }
-            }
-          }
+                $ref: '#/components/schemas/SuccessResponse',
+              },
+            },
+          },
         },
         400: {
           description: 'Bad Request - Invalid input or validation failure',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
@@ -641,19 +671,19 @@ API requests are subject to rate limiting. Monitor the following headers:
                   severity: 'low',
                   timestamp: '2025-06-02T12:00:00.000Z',
                   details: {
-                    quantity: 'Quantity must be greater than 0'
-                  }
-                }
-              }
-            }
-          }
+                    quantity: 'Quantity must be greater than 0',
+                  },
+                },
+              },
+            },
+          },
         },
         401: {
           description: 'Unauthorized - Missing or invalid API key',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
@@ -666,18 +696,18 @@ API requests are subject to rate limiting. Monitor the following headers:
                   category: 'authentication',
                   severity: 'medium',
                   timestamp: '2025-06-02T12:00:00.000Z',
-                  helpUrl: '/docs/authentication'
-                }
-              }
-            }
-          }
+                  helpUrl: '/docs/authentication',
+                },
+              },
+            },
+          },
         },
         403: {
           description: 'Forbidden - Insufficient permissions',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
@@ -690,41 +720,42 @@ API requests are subject to rate limiting. Monitor the following headers:
                   category: 'authorization',
                   severity: 'medium',
                   timestamp: '2025-06-02T12:00:00.000Z',
-                  helpUrl: '/docs/permissions'
-                }
-              }
-            }
-          }
+                  helpUrl: '/docs/permissions',
+                },
+              },
+            },
+          },
         },
         404: {
           description: 'Not Found - Resource does not exist',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
                 data: null,
                 errorDetails: {
                   errorCode: 404,
-                  errorMessage: 'Order with identifier \'123e4567-e89b-12d3-a456-426614174000\' not found',
+                  errorMessage:
+                    "Order with identifier '123e4567-e89b-12d3-a456-426614174000' not found",
                   errorId: '123e4567-e89b-12d3-a456-426614174000',
                   correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
                   category: 'not_found',
                   severity: 'low',
-                  timestamp: '2025-06-02T12:00:00.000Z'
-                }
-              }
-            }
-          }
+                  timestamp: '2025-06-02T12:00:00.000Z',
+                },
+              },
+            },
+          },
         },
         500: {
           description: 'Internal Server Error',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
@@ -737,18 +768,18 @@ API requests are subject to rate limiting. Monitor the following headers:
                   category: 'system',
                   severity: 'critical',
                   timestamp: '2025-06-02T12:00:00.000Z',
-                  retryable: false
-                }
-              }
-            }
-          }
+                  retryable: false,
+                },
+              },
+            },
+          },
         },
         503: {
           description: 'Service Unavailable - Service is temporarily unavailable',
           content: {
             'application/json': {
               schema: {
-                $ref: '#/components/schemas/ErrorResponse'
+                $ref: '#/components/schemas/ErrorResponse',
               },
               example: {
                 isSuccess: false,
@@ -761,12 +792,12 @@ API requests are subject to rate limiting. Monitor the following headers:
                   category: 'external_service',
                   severity: 'high',
                   timestamp: '2025-06-02T12:00:00.000Z',
-                  retryable: true
-                }
-              }
-            }
-          }
-        }
+                  retryable: true,
+                },
+              },
+            },
+          },
+        },
       },
       parameters: {
         CorrelationId: {
@@ -776,10 +807,10 @@ API requests are subject to rate limiting. Monitor the following headers:
           schema: {
             type: 'string',
             format: 'uuid',
-            example: '123e4567-e89b-12d3-a456-426614174000'
-          }
-        }
-      }
+            example: '123e4567-e89b-12d3-a456-426614174000',
+          },
+        },
+      },
     },
     tags: [
       {
@@ -787,37 +818,33 @@ API requests are subject to rate limiting. Monitor the following headers:
         description: 'Order management operations including verification and submission',
         externalDocs: {
           description: 'Order Management Guide',
-          url: 'https://docs.screencloud.com/scoms/orders'
-        }
+          url: 'https://docs.screencloud.com/scoms/orders',
+        },
       },
       {
         name: 'Warehouses',
         description: 'Warehouse inventory and location management',
         externalDocs: {
           description: 'Warehouse Management Guide',
-          url: 'https://docs.screencloud.com/scoms/warehouses'
-        }
+          url: 'https://docs.screencloud.com/scoms/warehouses',
+        },
       },
       {
         name: 'Health',
         description: 'Service health and monitoring endpoints',
         externalDocs: {
           description: 'Health Check Guide',
-          url: 'https://docs.screencloud.com/scoms/health'
-        }
-      }
+          url: 'https://docs.screencloud.com/scoms/health',
+        },
+      },
     ],
     security: [
       {
-        ApiKeyAuth: []
-      }
-    ]
+        ApiKeyAuth: [],
+      },
+    ],
   },
-  apis: [
-    './src/routes/*.ts',
-    './src/models/*.ts',
-    './src/types/*.ts'
-  ]
+  apis: ['./src/routes/*.ts', './src/models/*.ts', './src/types/*.ts'],
 };
 
 /**
@@ -885,13 +912,13 @@ export const setupSwagger = (app: Express): void => {
       persistAuthorization: true,
       syntaxHighlight: {
         activate: true,
-        theme: 'agate'
+        theme: 'agate',
       },
       // Pre-authorize with example API key for documentation purposes
       preauthorizeApiKey: {
-        ApiKeyAuth: 'scoms-demo-key'
-      }
-    }
+        ApiKeyAuth: 'scoms-demo-key',
+      },
+    },
   };
 
   // Serve Swagger JSON specification
@@ -908,8 +935,8 @@ export const setupSwagger = (app: Express): void => {
     res.redirect('/api-docs');
   });
 
-  console.log(`📚 Swagger documentation available at: http://localhost:3000/api-docs`);
-  console.log(`📝 Swagger JSON specification at: http://localhost:3000/api-docs.json`);
+  logger.info('📚 Swagger documentation available at: http://localhost:3000/api-docs');
+  logger.info('📝 Swagger JSON specification at: http://localhost:3000/api-docs.json');
 };
 
 export default { swaggerSpec, setupSwagger };

@@ -70,13 +70,13 @@ router.get(
  *     description: |
  *       Performs a comprehensive health check including all service dependencies
  *       and system metrics. This endpoint provides detailed information about:
- *       
+ *
  *       - **Database connectivity** and response times
- *       - **Consul configuration service** status  
+ *       - **Consul configuration service** status
  *       - **Error metrics** and service health trends
  *       - **System resources** (memory, CPU, uptime)
  *       - **Overall service status** based on all dependencies
- *       
+ *
  *       ## Health Status Levels
  *       - **healthy**: All systems operational
  *       - **degraded**: Some systems experiencing issues but service functional
@@ -260,11 +260,11 @@ router.get(
  *     description: |
  *       Kubernetes readiness probe endpoint that checks if the service is ready to accept traffic.
  *       This endpoint specifically validates database connectivity as it's critical for service operation.
- *       
+ *
  *       ## Readiness vs Liveness
  *       - **Readiness**: Can the service handle requests? (this endpoint)
  *       - **Liveness**: Is the service running? (see /live endpoint)
- *       
+ *
  *       Kubernetes will remove the pod from service if readiness fails.
  *     tags: [Health]
  *     parameters:
@@ -345,11 +345,11 @@ router.get(
  *     description: |
  *       Kubernetes liveness probe endpoint that indicates whether the service is running.
  *       This is a simple endpoint that always returns success if the process is alive.
- *       
+ *
  *       ## Liveness vs Readiness
  *       - **Liveness**: Is the service running? (this endpoint)
  *       - **Readiness**: Can the service handle requests? (see /ready endpoint)
- *       
+ *
  *       Kubernetes will restart the pod if liveness fails.
  *     tags: [Health]
  *     parameters:

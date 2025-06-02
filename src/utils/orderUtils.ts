@@ -165,7 +165,9 @@ export const allocateOrderAcrossWarehouses = (
   shippingLongitude: number,
   warehouses: Warehouse[],
 ): AllocationAndShipping => {
-  logger.info(`[allocateOrderAcrossWarehouses] input: quantity=${quantity}, shippingLatitude=${shippingLatitude}, shippingLongitude=${shippingLongitude}, warehouses=${JSON.stringify(warehouses)}`);
+  logger.info(
+    `[allocateOrderAcrossWarehouses] input: quantity=${quantity}, shippingLatitude=${shippingLatitude}, shippingLongitude=${shippingLongitude}, warehouses=${JSON.stringify(warehouses)}`,
+  );
   const totalStock = warehouses.reduce((sum, warehouse) => sum + warehouse.stock, 0);
 
   if (totalStock < quantity || warehouses.length === 0) {
@@ -182,21 +184,27 @@ export const allocateOrderAcrossWarehouses = (
     shippingLongitude,
   );
 
-  logger.info(`[allocateOrderAcrossWarehouses] sortedWarehouses: ${JSON.stringify(sortedWarehouses)}`);
+  logger.info(
+    `[allocateOrderAcrossWarehouses] sortedWarehouses: ${JSON.stringify(sortedWarehouses)}`,
+  );
 
   for (const warehouse of sortedWarehouses) {
     if (remainingQuantity <= 0) break;
     if (warehouse.stock <= 0) continue;
 
     const allocatedQuantity = Math.min(warehouse.stock, remainingQuantity);
-    logger.info(`[allocateOrderAcrossWarehouses] allocating: warehouse=${warehouse.name}, allocatedQuantity=${allocatedQuantity}, distanceKm=${warehouse.distanceKm}`);
+    logger.info(
+      `[allocateOrderAcrossWarehouses] allocating: warehouse=${warehouse.name}, allocatedQuantity=${allocatedQuantity}, distanceKm=${warehouse.distanceKm}`,
+    );
     allocation.push({ warehouse: warehouse.name, quantity: allocatedQuantity });
 
     totalShippingCost += calculateShippingCost(allocatedQuantity, warehouse.distanceKm);
     remainingQuantity -= allocatedQuantity;
   }
 
-  logger.info(`[allocateOrderAcrossWarehouses] result: allocation=${JSON.stringify(allocation)}, totalShippingCost=${totalShippingCost}, isStockSufficient=${totalStock >= quantity}, remainingQuantity=${remainingQuantity}`);
+  logger.info(
+    `[allocateOrderAcrossWarehouses] result: allocation=${JSON.stringify(allocation)}, totalShippingCost=${totalShippingCost}, isStockSufficient=${totalStock >= quantity}, remainingQuantity=${remainingQuantity}`,
+  );
 
   return { allocation, totalShippingCost, isStockSufficient: true };
 };
@@ -240,7 +248,9 @@ export const validateOrderInputSafe = (input: OrderInput): string | null => {
  * Validate shipping cost threshold
  */
 export const validateShippingCost = (shippingCost: number, totalPrice: number): string | null => {
-  logger.info(`[validateShippingCost] totalPrice=${totalPrice}, shippingCost=${shippingCost}, threshold=${getShippingCostThreshold() * totalPrice}`);
+  logger.info(
+    `[validateShippingCost] totalPrice=${totalPrice}, shippingCost=${shippingCost}, threshold=${getShippingCostThreshold() * totalPrice}`,
+  );
   if (totalPrice > 0 && shippingCost > getShippingCostThreshold() * totalPrice) {
     logger.info('[validateShippingCost] Shipping cost exceeds threshold!');
     return 'Shipping cost exceeds 15% of the order amount after discount';

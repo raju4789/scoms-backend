@@ -157,9 +157,7 @@
         "justifyMode": "auto",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -439,10 +437,7 @@
   "refresh": "30s",
   "schemaVersion": 37,
   "style": "dark",
-  "tags": [
-    "scoms",
-    "observability"
-  ],
+  "tags": ["scoms", "observability"],
   "templating": {
     "list": [
       {

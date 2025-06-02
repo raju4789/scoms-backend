@@ -177,11 +177,11 @@ router.get(
  *       Creates a new warehouse facility in the system. The warehouse name must be unique
  *       across all facilities. Location coordinates should be precise to ensure accurate
  *       shipping cost calculations.
- *       
+ *
  *       ## Validation Rules
  *       - **Name**: Must be unique, 1-100 characters, trimmed of whitespace
  *       - **Latitude**: Must be between -90 and 90 degrees
- *       - **Longitude**: Must be between -180 and 180 degrees  
+ *       - **Longitude**: Must be between -180 and 180 degrees
  *       - **Stock**: Must be non-negative integer, maximum 100,000 units
  *     tags: [Warehouses]
  *     security:
@@ -289,13 +289,13 @@ router.post(
  *       Updates an existing warehouse with new information. All fields are optional,
  *       but at least one field must be provided. The warehouse name must remain unique
  *       if updated.
- *       
+ *
  *       ## Updatable Fields
  *       - **name**: Warehouse display name (must be unique)
  *       - **latitude**: Latitude coordinate (-90 to 90)
  *       - **longitude**: Longitude coordinate (-180 to 180)
  *       - **stock**: Current inventory level (0 to 100,000)
- *       
+ *
  *       ## Common Use Cases
  *       - **Stock Adjustments**: Update inventory after receiving shipments
  *       - **Location Corrections**: Fix GPS coordinates for better accuracy
@@ -429,12 +429,12 @@ router.put(
  *     summary: Delete a warehouse
  *     description: |
  *       Permanently removes a warehouse from the system. This operation cannot be undone.
- *       
+ *
  *       ## Important Considerations
  *       - **Inventory Loss**: Any remaining stock will be permanently lost
  *       - **Order Impact**: Active orders allocated to this warehouse may be affected
  *       - **Historical Data**: Past orders referencing this warehouse will retain historical allocation data
- *       
+ *
  *       ## Safety Recommendations
  *       1. Transfer inventory to other warehouses before deletion
  *       2. Ensure no pending orders are allocated to this facility

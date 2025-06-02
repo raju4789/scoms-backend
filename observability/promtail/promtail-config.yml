@@ -21,27 +21,27 @@ scrape_configs:
         refresh_interval: 5s
         filters:
           - name: label
-            values: ["com.docker.compose.service=scoms-app"]
-    
+            values: ['com.docker.compose.service=scoms-app']
+
     relabel_configs:
       # Extract container name
       - source_labels: ['__meta_docker_container_name']
         target_label: 'container_name'
         regex: '/(.+)'
         replacement: '${1}'
-      
+
       # Extract service name from docker compose label
       - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
         target_label: 'compose_service'
-      
+
       # Add application label
       - target_label: 'application'
         replacement: 'scoms-backend'
-      
+
       # Add environment label
       - target_label: 'environment'
         replacement: 'production'
-        
+
     pipeline_stages:
       # Parse Docker JSON log format
       - json:
@@ -49,7 +49,7 @@ scrape_configs:
             log: log
             stream: stream
             timestamp: time
-      
+
       # Try to parse application JSON logs
       - json:
           source: log
@@ -67,12 +67,12 @@ scrape_configs:
             hostname: hostname
             type: type
             environment: environment
-      
+
       # Use Docker timestamp if app timestamp not available
       - timestamp:
           source: timestamp
           format: RFC3339Nano
-      
+
       # Add only essential labels (avoid high cardinality)
       - labels:
           level:

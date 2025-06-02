@@ -62,10 +62,7 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
     const pricing = calculatePricing(input.quantity);
     const shippingCost = Math.round(allocation.totalShippingCost * 100) / 100;
 
-    logger.info(
-      { event: 'verifyOrder', ...pricing, shippingCost },
-      'Order pricing calculated',
-    );
+    logger.info({ event: 'verifyOrder', ...pricing, shippingCost }, 'Order pricing calculated');
 
     // Step 5: Validate shipping cost threshold
     const shippingError = validateShippingCost(shippingCost, pricing.totalPrice);

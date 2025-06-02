@@ -170,7 +170,11 @@ class AuthService {
         this.authConfig.apiKeys[apiKey].lastUsed = new Date().toISOString();
 
         // Update in Consul (fire and forget)
-        const consul = (consulService as unknown as { consul: { kv: { set: (key: string, value: string) => Promise<void> } } }).consul;
+        const consul = (
+          consulService as unknown as {
+            consul: { kv: { set: (key: string, value: string) => Promise<void> } };
+          }
+        ).consul;
         consul.kv
           .set(`${this.CONSUL_AUTH_KEY}/config`, JSON.stringify(this.authConfig, null, 2))
           .catch((error: unknown) => logger.error('Error updating last used timestamp:', error));
@@ -205,7 +209,11 @@ class AuthService {
       };
 
       // Access consul directly from the service
-      const consul = (consulService as unknown as { consul: { kv: { set: (key: string, value: string) => Promise<void> } } }).consul;
+      const consul = (
+        consulService as unknown as {
+          consul: { kv: { set: (key: string, value: string) => Promise<void> } };
+        }
+      ).consul;
       await consul.kv.set(`${this.CONSUL_AUTH_KEY}/config`, JSON.stringify(config, null, 2));
 
       this.authConfig = config;

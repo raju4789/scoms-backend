@@ -93,9 +93,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -330,9 +328,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -952,9 +948,7 @@
         "justifyMode": "center",
         "orientation": "auto",
         "reduceOptions": {
-          "calcs": [
-            "lastNotNull"
-          ],
+          "calcs": ["lastNotNull"],
           "fields": "",
           "values": false
         },
@@ -1147,12 +1141,7 @@
   "refresh": "30s",
   "schemaVersion": 37,
   "style": "dark",
-  "tags": [
-    "scoms",
-    "production",
-    "observability",
-    "nodejs"
-  ],
+  "tags": ["scoms", "production", "observability", "nodejs"],
   "templating": {
     "list": [
       {

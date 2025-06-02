@@ -6,7 +6,7 @@ global:
     environment: 'production'
 
 rule_files:
-  - "alerts.yml"
+  - 'alerts.yml'
 
 alerting:
   alertmanagers:
@@ -29,7 +29,7 @@ scrape_configs:
     metrics_path: /metrics
     scrape_timeout: 10s
     honor_labels: true
-    
+
   # Docker containers metrics via cAdvisor (if needed later)
   - job_name: 'docker'
     static_configs:

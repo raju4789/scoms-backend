@@ -175,12 +175,12 @@ router.get(
  *       Validates an order and calculates pricing without actually creating the order.
  *       This endpoint is useful for providing real-time pricing and availability
  *       information to users before they commit to placing an order.
- *       
+ *
  *       ## Pricing Logic
  *       - **Base Price**: $100 per device
  *       - **Bulk Discounts**:
  *         - 10-24 devices: 5% discount
- *         - 25-49 devices: 10% discount  
+ *         - 25-49 devices: 10% discount
  *         - 50+ devices: 15% discount
  *       - **Shipping**: Based on distance from nearest warehouse
  *       - **Shipping Cap**: Maximum 15% of order total (after discount)
@@ -300,7 +300,7 @@ router.post(
  *       5. Calculate shipping costs
  *       6. Create the order if all validations pass
  *       7. Update warehouse inventory
- *       
+ *
  *       The order will be automatically allocated across multiple warehouses if needed
  *       to fulfill the requested quantity.
  *     tags: [Orders]
