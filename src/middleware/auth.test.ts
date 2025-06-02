@@ -8,8 +8,8 @@ import authService from '../services/authService';
 import { AuthenticatedRequest } from '../types/AuthTypes';
 
 // Mock dependencies
-jest.mock('../../services/authService');
-jest.mock('../../utils/logger');
+jest.mock('../services/authService');
+jest.mock('../utils/logger');
 
 const mockAuthService = authService as jest.Mocked<typeof authService>;
 
