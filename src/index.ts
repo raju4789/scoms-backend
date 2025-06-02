@@ -6,6 +6,7 @@ import consulService from './config/consul';
 import { correlationIdMiddleware } from './middleware/correlationId';
 import { errorHandler } from './middleware/errorHandler';
 import { requestLogger } from './middleware/requestLogger';
+import { metricsMiddleware, metricsHandler } from './middleware/metrics';
 import routes from './routes';
 import { runInitialDataLoad } from './utils/dbBootstrap';
 import { preloadConsulConfig } from './utils/consulBootstrap';
@@ -44,6 +45,7 @@ async function bootstrap() {
     // 7. Apply middleware
     app.use(correlationIdMiddleware);
     app.use(requestLogger);
+    app.use(metricsMiddleware);
     app.use(express.json({ limit: '10mb' }));
     app.use(express.urlencoded({ extended: true }));
 
@@ -73,6 +75,9 @@ async function bootstrap() {
         });
       }
     });
+
+    // 8.1. Metrics endpoint
+    app.get('/metrics', metricsHandler);
 
     // 9. API routes
     app.use('/api/v1', routes);

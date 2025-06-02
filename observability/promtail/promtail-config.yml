@@ -1,0 +1,82 @@
+server:
+  http_listen_port: 9080
+  grpc_listen_port: 0
+  log_level: warn
+
+positions:
+  filename: /promtail/positions.yaml
+  sync_period: 10s
+
+clients:
+  - url: http://loki:3100/loki/api/v1/push
+    timeout: 30s
+    batchwait: 1s
+    batchsize: 1048576
+
+scrape_configs:
+  # SCOMS Application Logs via Docker socket
+  - job_name: scoms-app
+    docker_sd_configs:
+      - host: unix:///var/run/docker.sock
+        refresh_interval: 5s
+        filters:
+          - name: label
+            values: ["com.docker.compose.service=scoms-app"]
+    
+    relabel_configs:
+      # Extract container name
+      - source_labels: ['__meta_docker_container_name']
+        target_label: 'container_name'
+        regex: '/(.+)'
+        replacement: '${1}'
+      
+      # Extract service name from docker compose label
+      - source_labels: ['__meta_docker_container_label_com_docker_compose_service']
+        target_label: 'compose_service'
+      
+      # Add application label
+      - target_label: 'application'
+        replacement: 'scoms-backend'
+      
+      # Add environment label
+      - target_label: 'environment'
+        replacement: 'production'
+        
+    pipeline_stages:
+      # Parse Docker JSON log format
+      - json:
+          expressions:
+            log: log
+            stream: stream
+            timestamp: time
+      
+      # Try to parse application JSON logs
+      - json:
+          source: log
+          expressions:
+            level: level
+            msg: msg
+            service: service
+            method: method
+            url: url
+            statusCode: statusCode
+            duration: duration
+            correlationId: correlationId
+            error: error
+            pid: pid
+            hostname: hostname
+            type: type
+            environment: environment
+      
+      # Use Docker timestamp if app timestamp not available
+      - timestamp:
+          source: timestamp
+          format: RFC3339Nano
+      
+      # Add only essential labels (avoid high cardinality)
+      - labels:
+          level:
+          application:
+          compose_service:
+          container_name:
+          environment:

@@ -31,19 +31,32 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   res.end = function (this: Response, ...args: Parameters<typeof originalEnd>) {
     const duration = Date.now() - startTime;
 
-    // Log response
-    logger.info(
-      {
-        type: 'http_request_complete',
-        method: req.method,
-        url: req.originalUrl,
-        statusCode: res.statusCode,
-        duration,
-        correlationId: req.correlationId,
-        contentType: res.getHeader('content-type'),
-      },
-      `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`,
-    );
+    const logData = {
+      type: 'http_request_complete',
+      method: req.method,
+      url: req.originalUrl,
+      statusCode: res.statusCode,
+      duration,
+      correlationId: req.correlationId,
+      contentType: res.getHeader('content-type'),
+    };
+
+    const logMessage = `${req.method} ${req.originalUrl} ${res.statusCode} - ${duration}ms`;
+
+    // Log at appropriate level based on status code
+    if (res.statusCode >= 500) {
+      // Server errors (5xx) - error level
+      logger.error(logData, logMessage);
+    } else if (res.statusCode >= 400) {
+      // Client errors (4xx) including 404 - error level
+      logger.error(logData, logMessage);
+    } else if (res.statusCode >= 300) {
+      // Redirects (3xx) - info level
+      logger.info(logData, logMessage);
+    } else {
+      // Success (2xx) - info level
+      logger.info(logData, logMessage);
+    }
 
     // Call original end method
     return originalEnd.apply(this, args);

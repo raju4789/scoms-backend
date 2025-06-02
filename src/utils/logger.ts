@@ -80,6 +80,7 @@ const logger = pino({
     log: (obj: Record<string, unknown>) => ({
       ...obj,
       '@timestamp': new Date().toISOString(),
+      environment: process.env.NODE_ENV || 'development',
     }),
   },
 

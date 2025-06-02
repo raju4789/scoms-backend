@@ -3,6 +3,7 @@ import * as warehouseRepository from '../repositories/warehouseRepository';
 import { NotFoundError } from '../errors/ErrorTypes';
 import { Warehouse } from '../models/Warehouse';
 import { CreateWarehouseInput, UpdateWarehouseInput } from '../types/OrderServiceTypes';
+import { recordWarehouseOperation, recordError } from '../middleware/metrics';
 import {
   validateCreateWarehouseInput,
   validateUpdateWarehouseInput,
@@ -19,9 +20,12 @@ export const createWarehouse = async (data: CreateWarehouseInput): Promise<Wareh
   logger.info({ event: 'createWarehouse', data }, 'Service: createWarehouse called');
   validateCreateWarehouseInput(data);
   try {
-    return await warehouseRepository.createWarehouse(data);
+    const warehouse = await warehouseRepository.createWarehouse(data);
+    recordWarehouseOperation('create', warehouse.id.toString());
+    return warehouse;
   } catch (error) {
     logger.error({ event: 'createWarehouse', error }, 'Failed to create warehouse');
+    recordError('warehouse_creation_failed', 'error');
     throw error;
   }
 };

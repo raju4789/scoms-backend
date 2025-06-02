@@ -2,6 +2,7 @@ import * as warehouseRepository from '../repositories/warehouseRepository';
 import * as orderRepository from '../repositories/orderRepository';
 import logger from '../utils/logger';
 import { BusinessLogicError, ValidationError } from '../errors/ErrorTypes';
+import { recordOrderMetric, recordError } from '../middleware/metrics';
 import {
   getDevicePrice,
   getDeviceWeight,
@@ -290,6 +291,9 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
         'Order submitted and persisted',
       );
 
+      // Record order metrics
+      recordOrderMetric('created', 'mixed'); // Since allocation could be across multiple warehouses
+
       return createdOrder;
     });
 
@@ -309,6 +313,10 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
       },
       'Order submission failed with error',
     );
+    
+    // Record error metrics
+    recordError('order_submission_failed', 'error');
+    
     throw error;
   }
 };
