@@ -43,25 +43,6 @@ const router = Router();
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Warehouse'
- *             example:
- *               isSuccess: true
- *               data:
- *                 - id: 1
- *                   name: "New York Distribution Center"
- *                   latitude: 40.7128
- *                   longitude: -74.0060
- *                   stock: 1500
- *                 - id: 2
- *                   name: "Los Angeles Warehouse"
- *                   latitude: 34.0522
- *                   longitude: -118.2437
- *                   stock: 2200
- *                 - id: 3
- *                   name: "Chicago Hub"
- *                   latitude: 41.8781
- *                   longitude: -87.6298
- *                   stock: 1800
- *               errorDetails: null
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -112,29 +93,12 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/Warehouse'
- *             example:
- *               isSuccess: true
- *               data:
- *                 id: 1
- *                 name: "New York Distribution Center"
- *                 latitude: 40.7128
- *                 longitude: -74.0060
- *                 stock: 1500
- *               errorDetails: null
  *       400:
  *         description: Invalid warehouse ID
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 400
- *                 errorMessage: "Warehouse ID must be a positive integer"
- *                 category: "validation"
- *                 severity: "low"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -145,14 +109,6 @@ router.get(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 404
- *                 errorMessage: "Warehouse with identifier '999' not found"
- *                 category: "not_found"
- *                 severity: "low"
  *       500:
  *         $ref: '#/components/responses/500'
  */
@@ -194,21 +150,6 @@ router.get(
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/CreateWarehouseInput'
- *           examples:
- *             new_warehouse:
- *               summary: Standard warehouse creation
- *               value:
- *                 name: "Miami Distribution Center"
- *                 latitude: 25.7617
- *                 longitude: -80.1918
- *                 stock: 1000
- *             large_warehouse:
- *               summary: Large capacity warehouse
- *               value:
- *                 name: "Texas Mega Hub"
- *                 latitude: 29.7604
- *                 longitude: -95.3698
- *                 stock: 5000
  *     responses:
  *       200:
  *         description: Warehouse successfully created
@@ -221,45 +162,12 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/Warehouse'
- *             example:
- *               isSuccess: true
- *               data:
- *                 id: 4
- *                 name: "Miami Distribution Center"
- *                 latitude: 25.7617
- *                 longitude: -80.1918
- *                 stock: 1000
- *               errorDetails: null
  *       400:
  *         description: Invalid input or validation failure
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             examples:
- *               validation_error:
- *                 summary: Input validation failed
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "Warehouse validation failed"
- *                     category: "validation"
- *                     severity: "low"
- *                     details:
- *                       name: "Name is required and must be unique"
- *                       latitude: "Latitude must be between -90 and 90"
- *               duplicate_name:
- *                 summary: Warehouse name already exists
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "Warehouse name 'New York Distribution Center' already exists"
- *                     category: "business_logic"
- *                     severity: "medium"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -319,23 +227,6 @@ router.post(
  *         application/json:
  *           schema:
  *             $ref: '#/components/schemas/UpdateWarehouseInput'
- *           examples:
- *             stock_update:
- *               summary: Update inventory levels only
- *               value:
- *                 stock: 2500
- *             location_update:
- *               summary: Update warehouse coordinates
- *               value:
- *                 latitude: 40.7589
- *                 longitude: -73.9851
- *             full_update:
- *               summary: Update multiple fields
- *               value:
- *                 name: "Manhattan Distribution Hub"
- *                 latitude: 40.7589
- *                 longitude: -73.9851
- *                 stock: 3000
  *     responses:
  *       200:
  *         description: Warehouse successfully updated
@@ -348,44 +239,12 @@ router.post(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/Warehouse'
- *             example:
- *               isSuccess: true
- *               data:
- *                 id: 1
- *                 name: "Manhattan Distribution Hub"
- *                 latitude: 40.7589
- *                 longitude: -73.9851
- *                 stock: 3000
- *               errorDetails: null
  *       400:
  *         description: Invalid input or validation failure
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             examples:
- *               validation_error:
- *                 summary: Input validation failed
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "Warehouse update validation failed"
- *                     category: "validation"
- *                     severity: "low"
- *                     details:
- *                       stock: "Stock must be a non-negative number"
- *               no_fields:
- *                 summary: No fields provided for update
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "At least one field must be provided for update"
- *                     category: "validation"
- *                     severity: "low"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -396,14 +255,6 @@ router.post(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 404
- *                 errorMessage: "Warehouse with identifier '999' not found"
- *                 category: "not_found"
- *                 severity: "low"
  *       500:
  *         $ref: '#/components/responses/500'
  */
@@ -465,24 +316,12 @@ router.put(
  *                     data:
  *                       type: 'null'
  *                       description: 'No data returned for successful deletion'
- *             example:
- *               isSuccess: true
- *               data: null
- *               errorDetails: null
  *       400:
  *         description: Invalid warehouse ID
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 400
- *                 errorMessage: "Warehouse ID must be a positive integer"
- *                 category: "validation"
- *                 severity: "low"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -493,14 +332,6 @@ router.put(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 404
- *                 errorMessage: "Warehouse with identifier '999' not found"
- *                 category: "not_found"
- *                 severity: "low"
  *       500:
  *         $ref: '#/components/responses/500'
  */

@@ -4,95 +4,79 @@ import { Express } from 'express';
 import logger from '../utils/logger';
 
 /**
- * Swagger configuration using OpenAPI 3.0.3 specification
- * Following production best practices for API documentation
+ * Production-ready Swagger configuration following OpenAPI 3.0.3 specification
+ * Implements enterprise-grade API documentation standards
  */
 const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.3',
     info: {
-      title: 'ScreenCloud Order Management System (SCOMS) API',
+      title: 'SCOMS Backend - Order Management System API',
       version: '1.0.0',
       description: `
-# ScreenCloud Order Management System API
+# SCOMS Backend API Documentation
 
-A comprehensive RESTful API for managing orders and warehouses in the ScreenCloud ecosystem.
+A TypeScript-based order management system with intelligent warehouse allocation, dynamic pricing, and real-time inventory management.
 
-## Features
+## 🚀 Quick Start Guide
 
-- **Order Management**: Create, verify, and track orders with real-time pricing
-- **Warehouse Management**: Full CRUD operations for warehouse inventory
-- **Multi-warehouse Allocation**: Intelligent distribution of orders across warehouses
-- **Dynamic Pricing**: Bulk discount tiers and location-based shipping costs
-- **Health Monitoring**: Comprehensive health checks and metrics
-- **Security**: API key-based authentication with role-based permissions
+1. **Authentication**: Use Bearer token authentication with one of the test API keys
+2. **Try endpoints**: Use the interactive examples below to test all functionality
+3. **Monitor responses**: All responses follow standardized success/error format
+4. **Request tracing**: Every request includes correlation IDs for debugging
 
-## Authentication
+## 🔐 Authentication & Security
 
-All endpoints (except health checks) require API key authentication via the \`Authorization\` header:
+### API Key Authentication
+All API endpoints (except health checks) require Bearer token authentication:
 
 \`\`\`
 Authorization: Bearer YOUR_API_KEY
 \`\`\`
 
-### Permission Levels
+### Available Test Keys
+- \`scoms-frontend-key\` - Frontend application access
+- \`scoms-admin-key\` - Administrative operations  
+- \`scoms-monitoring-key\` - Health monitoring access
 
-- **orders:read** - Read orders and verify pricing
-- **orders:write** - Submit new orders
-- **warehouses:read** - View warehouse information
-- **warehouses:write** - Manage warehouse inventory
+## 📊 Business Logic
 
-## Error Handling
+### Dynamic Pricing Algorithm
+- Base device price configurable via Consul with volume-based discount tiers
+- Shipping costs calculated using distance-based algorithms with configurable caps
 
-All endpoints return a consistent error format with detailed error information:
+### Warehouse Selection Logic
+1. **Distance Calculation**: Uses Haversine formula for accurate geographic distance
+2. **Inventory Check**: Verifies sufficient stock at each warehouse  
+3. **Optimal Selection**: Chooses nearest warehouse with adequate inventory
+4. **Fallback Strategy**: Multi-warehouse allocation if needed
 
-\`\`\`json
-{
-  "isSuccess": false,
-  "data": null,
-  "errorDetails": {
-    "errorCode": 400,
-    "errorMessage": "Validation failed",
-    "errorId": "uuid",
-    "correlationId": "uuid",
-    "category": "validation",
-    "severity": "low",
-    "timestamp": "2025-06-02T12:00:00.000Z"
-  }
-}
-\`\`\`
+## 🛠️ Error Handling
 
-## Rate Limiting
+All error responses follow a standardized format with detailed error information for debugging and monitoring.
 
-API requests are subject to rate limiting. Monitor the following headers:
-- \`X-RateLimit-Limit\` - Request limit per window
-- \`X-RateLimit-Remaining\` - Remaining requests in current window
-- \`X-RateLimit-Reset\` - Time when the current window resets
+## 🧪 Testing Guide
+
+Use the interactive examples below to test all endpoints. Each endpoint includes realistic test data and comprehensive validation.
       `,
       contact: {
-        name: 'SCOMS API Support',
-        email: 'api-support@screencloud.com',
-        url: 'https://docs.screencloud.com/scoms',
+        name: 'SCOMS API Team',
+        email: 'api-support@scoms.local',
       },
       license: {
         name: 'MIT',
         url: 'https://opensource.org/licenses/MIT',
-      },
-      termsOfService: 'https://screencloud.com/terms',
+      }
     },
     servers: [
       {
         url: 'http://localhost:3000/api/v1',
-        description: 'Development server',
+        description: 'Development server - Local development environment',
       },
       {
-        url: 'https://staging-api.screencloud.com/scoms/v1',
-        description: 'Staging server',
-      },
-      {
-        url: 'https://api.screencloud.com/scoms/v1',
-        description: 'Production server',
-      },
+        url: 'http://localhost:3000',
+        description: 'Development server - Health endpoints',
+      }
     ],
     components: {
       securitySchemes: {
@@ -149,73 +133,8 @@ API requests are subject to rate limiting. Monitor the following headers:
                   example: 'Validation failed',
                   description: 'Human-readable error message',
                 },
-                errorId: {
-                  type: 'string',
-                  format: 'uuid',
-                  example: '123e4567-e89b-12d3-a456-426614174000',
-                  description: 'Unique identifier for this error instance',
-                },
-                correlationId: {
-                  type: 'string',
-                  format: 'uuid',
-                  example: '987fcdeb-51e2-43d1-b456-426614174000',
-                  description: 'Request correlation ID for tracing',
-                },
-                category: {
-                  type: 'string',
-                  enum: [
-                    'validation',
-                    'authentication',
-                    'authorization',
-                    'not_found',
-                    'business_logic',
-                    'external_service',
-                    'database',
-                    'network',
-                    'system',
-                    'unknown',
-                  ],
-                  example: 'validation',
-                  description: 'Error category for classification',
-                },
-                severity: {
-                  type: 'string',
-                  enum: ['low', 'medium', 'high', 'critical'],
-                  example: 'low',
-                  description: 'Error severity level',
-                },
-                timestamp: {
-                  type: 'string',
-                  format: 'date-time',
-                  example: '2025-06-02T12:00:00.000Z',
-                  description: 'Error occurrence timestamp',
-                },
-                details: {
-                  type: 'object',
-                  additionalProperties: true,
-                  description: 'Additional error context and details',
-                },
-                retryable: {
-                  type: 'boolean',
-                  example: false,
-                  description: 'Whether the request can be retried',
-                },
-                helpUrl: {
-                  type: 'string',
-                  format: 'uri',
-                  example: 'https://docs.screencloud.com/scoms/errors/validation',
-                  description: 'URL with more information about this error',
-                },
               },
-              required: [
-                'errorCode',
-                'errorMessage',
-                'errorId',
-                'correlationId',
-                'category',
-                'severity',
-                'timestamp',
-              ],
+              required: ['errorCode', 'errorMessage'],
             },
           },
           required: ['isSuccess', 'data', 'errorDetails'],
@@ -235,7 +154,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'integer',
               minimum: 1,
               maximum: 10000,
-              example: 25,
+              example: 50,
               description: 'Number of devices ordered',
             },
             shipping_latitude: {
@@ -258,22 +177,22 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 2375.0,
-              description: 'Final total price after discount, before shipping',
+              example: 6750.0,
+              description: 'Final total price after volume discount, before shipping',
             },
             discount: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 125.0,
-              description: 'Discount amount applied to the order',
+              example: 750.0,
+              description: 'Volume discount amount applied to the order',
             },
             shipping_cost: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 35.5,
-              description: 'Shipping cost for the order',
+              example: 125.5,
+              description: 'Calculated shipping cost based on distance and weight',
             },
             warehouse_allocation: {
               type: 'array',
@@ -308,7 +227,7 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'integer',
               minimum: 1,
               maximum: 10000,
-              example: 25,
+              example: 50,
               description: 'Number of devices to order',
             },
             shipping_latitude: {
@@ -343,22 +262,22 @@ API requests are subject to rate limiting. Monitor the following headers:
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 2375.0,
-              description: 'Total price after discount, before shipping',
+              example: 6750.0,
+              description: 'Total price after volume discount, before shipping',
             },
             discount: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 125.0,
-              description: 'Discount amount applied',
+              example: 750.0,
+              description: 'Volume discount amount applied based on quantity',
             },
             shippingCost: {
               type: 'number',
               format: 'float',
               minimum: 0,
-              example: 35.5,
-              description: 'Calculated shipping cost',
+              example: 125.5,
+              description: 'Calculated shipping cost based on distance and weight',
             },
             reason: {
               type: 'string',
@@ -373,13 +292,13 @@ API requests are subject to rate limiting. Monitor the following headers:
           properties: {
             warehouse: {
               type: 'string',
-              example: 'New York Warehouse',
+              example: 'New York Distribution Center',
               description: 'Name of the warehouse',
             },
             quantity: {
               type: 'integer',
               minimum: 1,
-              example: 15,
+              example: 50,
               description: 'Quantity allocated from this warehouse',
             },
           },
@@ -659,22 +578,6 @@ API requests are subject to rate limiting. Monitor the following headers:
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
               },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 400,
-                  errorMessage: 'Validation failed',
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'validation',
-                  severity: 'low',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                  details: {
-                    quantity: 'Quantity must be greater than 0',
-                  },
-                },
-              },
             },
           },
         },
@@ -684,20 +587,6 @@ API requests are subject to rate limiting. Monitor the following headers:
             'application/json': {
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
-              },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 401,
-                  errorMessage: 'Authentication required',
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'authentication',
-                  severity: 'medium',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                  helpUrl: '/docs/authentication',
-                },
               },
             },
           },
@@ -709,20 +598,6 @@ API requests are subject to rate limiting. Monitor the following headers:
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
               },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 403,
-                  errorMessage: 'Insufficient permissions',
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'authorization',
-                  severity: 'medium',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                  helpUrl: '/docs/permissions',
-                },
-              },
             },
           },
         },
@@ -732,20 +607,6 @@ API requests are subject to rate limiting. Monitor the following headers:
             'application/json': {
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
-              },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 404,
-                  errorMessage:
-                    "Order with identifier '123e4567-e89b-12d3-a456-426614174000' not found",
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'not_found',
-                  severity: 'low',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                },
               },
             },
           },
@@ -757,20 +618,6 @@ API requests are subject to rate limiting. Monitor the following headers:
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
               },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 500,
-                  errorMessage: 'An unexpected error occurred',
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'system',
-                  severity: 'critical',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                  retryable: false,
-                },
-              },
             },
           },
         },
@@ -781,20 +628,6 @@ API requests are subject to rate limiting. Monitor the following headers:
               schema: {
                 $ref: '#/components/schemas/ErrorResponse',
               },
-              example: {
-                isSuccess: false,
-                data: null,
-                errorDetails: {
-                  errorCode: 503,
-                  errorMessage: 'Service temporarily unavailable',
-                  errorId: '123e4567-e89b-12d3-a456-426614174000',
-                  correlationId: '987fcdeb-51e2-43d1-b456-426614174000',
-                  category: 'external_service',
-                  severity: 'high',
-                  timestamp: '2025-06-02T12:00:00.000Z',
-                  retryable: true,
-                },
-              },
             },
           },
         },
@@ -803,11 +636,30 @@ API requests are subject to rate limiting. Monitor the following headers:
         CorrelationId: {
           name: 'X-Correlation-ID',
           in: 'header',
-          description: 'Unique identifier for request tracing across services',
+          description: 'Optional correlation ID for request tracing. If not provided, one will be generated automatically.',
           schema: {
             type: 'string',
             format: 'uuid',
             example: '123e4567-e89b-12d3-a456-426614174000',
+          },
+        },
+        AcceptLanguage: {
+          name: 'Accept-Language',
+          in: 'header',
+          description: 'Preferred language for error messages and responses',
+          schema: {
+            type: 'string',
+            default: 'en-US',
+            example: 'en-US',
+          },
+        },
+        UserAgent: {
+          name: 'User-Agent',
+          in: 'header',
+          description: 'Client application identifier for monitoring and analytics',
+          schema: {
+            type: 'string',
+            example: 'SCOMS-Frontend/1.0.0',
           },
         },
       },
@@ -815,26 +667,26 @@ API requests are subject to rate limiting. Monitor the following headers:
     tags: [
       {
         name: 'Orders',
-        description: 'Order management operations including verification and submission',
+        description: 'Order management operations including verification, submission, and retrieval',
         externalDocs: {
-          description: 'Order Management Guide',
-          url: 'https://docs.screencloud.com/scoms/orders',
+          description: 'Order Management Documentation',
+          url: 'https://github.com/raju4789/scoms-backend#-business-logic',
         },
       },
       {
         name: 'Warehouses',
-        description: 'Warehouse inventory and location management',
+        description: 'Warehouse inventory and location management operations',
         externalDocs: {
-          description: 'Warehouse Management Guide',
-          url: 'https://docs.screencloud.com/scoms/warehouses',
+          description: 'Warehouse Management Documentation', 
+          url: 'https://github.com/raju4789/scoms-backend#warehouse-selection-logic',
         },
       },
       {
         name: 'Health',
-        description: 'Service health and monitoring endpoints',
+        description: 'Service health monitoring and readiness endpoints for operational monitoring',
         externalDocs: {
-          description: 'Health Check Guide',
-          url: 'https://docs.screencloud.com/scoms/health',
+          description: 'Health Check Documentation',
+          url: 'https://github.com/raju4789/scoms-backend#-monitoring--observability',
         },
       },
     ],
@@ -916,7 +768,7 @@ export const setupSwagger = (app: Express): void => {
       },
       // Pre-authorize with example API key for documentation purposes
       preauthorizeApiKey: {
-        ApiKeyAuth: 'scoms-demo-key',
+        ApiKeyAuth: 'scoms-frontend-key',
       },
     },
   };

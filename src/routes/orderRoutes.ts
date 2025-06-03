@@ -36,23 +36,6 @@ const router = Router();
  *                       type: array
  *                       items:
  *                         $ref: '#/components/schemas/Order'
- *             example:
- *               isSuccess: true
- *               data:
- *                 - id: "123e4567-e89b-12d3-a456-426614174000"
- *                   quantity: 25
- *                   shipping_latitude: 40.7128
- *                   shipping_longitude: -74.0060
- *                   total_price: 2375.00
- *                   discount: 125.00
- *                   shipping_cost: 35.50
- *                   warehouse_allocation:
- *                     - warehouse: "New York Warehouse"
- *                       quantity: 15
- *                     - warehouse: "Boston Warehouse"
- *                       quantity: 10
- *                   created_at: "2025-06-02T12:00:00.000Z"
- *               errorDetails: null
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -103,37 +86,12 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/Order'
- *             example:
- *               isSuccess: true
- *               data:
- *                 id: "123e4567-e89b-12d3-a456-426614174000"
- *                 quantity: 25
- *                 shipping_latitude: 40.7128
- *                 shipping_longitude: -74.0060
- *                 total_price: 2375.00
- *                 discount: 125.00
- *                 shipping_cost: 35.50
- *                 warehouse_allocation:
- *                   - warehouse: "New York Warehouse"
- *                     quantity: 15
- *                   - warehouse: "Boston Warehouse"
- *                     quantity: 10
- *                 created_at: "2025-06-02T12:00:00.000Z"
- *               errorDetails: null
  *       400:
  *         description: Invalid order ID format
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 400
- *                 errorMessage: "Order ID must be a valid UUID"
- *                 category: "validation"
- *                 severity: "low"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -144,14 +102,6 @@ router.get(
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 404
- *                 errorMessage: "Order with identifier '123e4567-e89b-12d3-a456-426614174000' not found"
- *                 category: "not_found"
- *                 severity: "low"
  *       500:
  *         $ref: '#/components/responses/500'
  */
@@ -177,13 +127,12 @@ router.get(
  *       information to users before they commit to placing an order.
  *
  *       ## Pricing Logic
- *       - **Base Price**: $100 per device
- *       - **Bulk Discounts**:
- *         - 10-24 devices: 5% discount
- *         - 25-49 devices: 10% discount
- *         - 50+ devices: 15% discount
- *       - **Shipping**: Based on distance from nearest warehouse
- *       - **Shipping Cap**: Maximum 15% of order total (after discount)
+ *       - **Base Price**: Configurable per device pricing from Consul
+ *       - **Volume Discounts**: Tiered discount structure based on quantity
+ *         - Multiple discount tiers available for different quantity ranges
+ *         - Discount percentages are configurable via Consul
+ *       - **Shipping**: Distance-based calculation from nearest warehouse
+ *       - **Shipping Cap**: Configurable maximum percentage of order total
  *     tags: [Orders]
  *     security:
  *       - ApiKeyAuth: []
@@ -197,19 +146,19 @@ router.get(
  *             $ref: '#/components/schemas/OrderInput'
  *           examples:
  *             small_order:
- *               summary: Small order (no discount)
+ *               summary: Small order example
  *               value:
  *                 quantity: 5
  *                 shipping_latitude: 40.7128
  *                 shipping_longitude: -74.0060
  *             bulk_order:
- *               summary: Bulk order (10% discount)
+ *               summary: Bulk order example
  *               value:
  *                 quantity: 25
  *                 shipping_latitude: 40.7128
  *                 shipping_longitude: -74.0060
  *             large_order:
- *               summary: Large order (15% discount)
+ *               summary: Large order example
  *               value:
  *                 quantity: 100
  *                 shipping_latitude: 40.7128
@@ -226,45 +175,12 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/OrderVerificationResult'
- *             examples:
- *               valid_order:
- *                 summary: Valid order with pricing
- *                 value:
- *                   isSuccess: true
- *                   data:
- *                     isValid: true
- *                     totalPrice: 2375.00
- *                     discount: 125.00
- *                     shippingCost: 35.50
- *                   errorDetails: null
- *               invalid_order:
- *                 summary: Invalid order (insufficient stock)
- *                 value:
- *                   isSuccess: true
- *                   data:
- *                     isValid: false
- *                     totalPrice: 0
- *                     discount: 0
- *                     shippingCost: 0
- *                     reason: "Insufficient stock available"
- *                   errorDetails: null
  *       400:
  *         description: Invalid input data
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             example:
- *               isSuccess: false
- *               data: null
- *               errorDetails:
- *                 errorCode: 400
- *                 errorMessage: "Order input validation failed"
- *                 category: "validation"
- *                 severity: "low"
- *                 details:
- *                   quantity: "Quantity must be greater than 0"
- *                   shipping_latitude: "Latitude must be between -90 and 90"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:
@@ -322,7 +238,7 @@ router.post(
  *                 shipping_latitude: 40.7128
  *                 shipping_longitude: -74.0060
  *             bulk_order:
- *               summary: Bulk order with discount
+ *               summary: Bulk order example
  *               value:
  *                 quantity: 25
  *                 shipping_latitude: 34.0522
@@ -359,44 +275,12 @@ router.post(
  *                           type: number
  *                           format: float
  *                           description: Calculated shipping cost
- *             example:
- *               isSuccess: true
- *               data:
- *                 id: "123e4567-e89b-12d3-a456-426614174000"
- *                 quantity: 25
- *                 total_price: 2250.00
- *                 discount: 250.00
- *                 shipping_cost: 45.75
- *               errorDetails: null
  *       400:
  *         description: Invalid input or business logic violation
  *         content:
  *           application/json:
  *             schema:
  *               $ref: '#/components/schemas/ErrorResponse'
- *             examples:
- *               validation_error:
- *                 summary: Input validation failed
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "Order input validation failed"
- *                     category: "validation"
- *                     severity: "low"
- *                     details:
- *                       quantity: "Quantity must be between 1 and 10000"
- *               insufficient_stock:
- *                 summary: Insufficient inventory
- *                 value:
- *                   isSuccess: false
- *                   data: null
- *                   errorDetails:
- *                     errorCode: 400
- *                     errorMessage: "Insufficient stock to fulfill order"
- *                     category: "business_logic"
- *                     severity: "medium"
  *       401:
  *         $ref: '#/components/responses/401'
  *       403:

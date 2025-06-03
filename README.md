@@ -211,18 +211,44 @@ Authorization: Bearer scoms-frontend-key
 | `POST` | `/api/v1/orders/submit` | Create new order | ✅ |
 | `GET` | `/api/v1/orders/:id` | Get order details | ✅ |
 
+## 📖 Interactive API Documentation (Swagger)
+
+SCOMS provides comprehensive interactive API documentation powered by Swagger/OpenAPI 3.0. The documentation includes request/response examples, schema definitions, and a built-in API testing interface.
+
+### Accessing Swagger UI
+
+- **URL**: http://localhost:3000/api-docs
+- **Features**: 
+  - Interactive API testing directly from the browser
+  - Comprehensive request/response schemas
+  - Authentication examples with API keys
+  - Real-time validation and error handling
+  - Export functionality for API specifications
+
+### Key Features
+
+- **Try It Out**: Test all endpoints directly from the documentation
+- **Schema Validation**: Real-time request validation with detailed error messages
+- **Authentication Setup**: Built-in authentication configuration for testing
+- **Response Examples**: Complete request/response examples for all endpoints
+- **Download Specification**: Export OpenAPI 3.0 specification in JSON/YAML format
+
+*Add your Swagger UI screenshots here*
+
+---
+
 ## 💰 Business Logic
 
 ### Dynamic Pricing Algorithm
 
-Base device price: **$150** (configurable via Consul)
+Base device price configurable via Consul with volume-based discount tiers.
 
 **Volume Discount Tiers:** (configurable via Consul)
-- 1-24 devices: **0%** discount
-- 25-49 devices: **5%** discount
-- 50-99 devices: **10%** discount
-- 100-249 devices: **15%** discount
-- 250+ devices: **20%** discount
+- Small orders (1-24 devices): No discount
+- Medium orders (25-49 devices): Low discount tier
+- Large orders (50-99 devices): Medium discount tier  
+- Bulk orders (100-249 devices): High discount tier
+- Enterprise orders (250+ devices): Maximum discount tier
 
 ### Warehouse Selection Logic
 
@@ -233,9 +259,9 @@ Base device price: **$150** (configurable via Consul)
 
 ### Shipping Cost Calculation
 
-- **Rate**: $0.01 per kg per km (configurable)
-- **Device Weight**: 0.365kg per device (configurable via Consul)
-- **Cap**: Maximum 15% of order subtotal (configurable via Consul)
+- **Rate**: Configurable per kg per km rate
+- **Device Weight**: Configurable device weight (via Consul)
+- **Cap**: Configurable maximum percentage of order subtotal (via Consul)
 - **Distance**: Great-circle distance between customer and warehouse
 
 ## 🧪 Testing Strategy
@@ -285,9 +311,53 @@ docker-compose down
 - **Business Metrics**: Order volume, revenue, warehouse utilization
 - **System Metrics**: CPU, memory, database connections
 
-### Grafana Dashboards
+## 📊 Grafana Dashboards & Monitoring
 
-Access Grafana at http://localhost:3001 (admin/admin)
+SCOMS includes a comprehensive monitoring stack with Grafana dashboards providing real-time insights into application performance, business metrics, and system health.
+
+### Accessing Grafana
+
+- **URL**: http://localhost:3001
+- **Credentials**: admin/admin (default)
+- **Data Sources**: Prometheus metrics, application logs
+
+### Available Dashboards
+
+#### 🎯 Application Overview Dashboard
+- **Request Metrics**: Total requests, requests per second, response times
+- **Error Tracking**: Error rates, error types, failed request analysis
+- **Performance Monitoring**: P95/P99 response times, throughput analysis
+- **API Endpoint Analytics**: Per-endpoint performance and usage statistics
+
+#### 💼 Business Intelligence Dashboard
+- **Order Analytics**: Order volume trends, revenue tracking
+- **Warehouse Utilization**: Inventory levels, order distribution by warehouse
+- **Customer Insights**: Geographic distribution, order size analysis
+- **Pricing Analytics**: Discount usage, average order values
+
+#### ⚙️ System Health Dashboard
+- **Resource Utilization**: CPU, memory, disk usage
+- **Database Performance**: Connection pool status, query performance
+- **Container Metrics**: Docker container health and resource consumption
+- **Infrastructure Monitoring**: Network I/O, system load averages
+
+### Key Features
+
+- **Real-time Updates**: Live data streaming with configurable refresh intervals
+- **Interactive Visualizations**: Drill-down capabilities and time range selection
+- **Alert Integration**: Visual indicators for system alerts and thresholds
+- **Export Capabilities**: Dashboard sharing and PDF report generation
+- **Custom Time Ranges**: Flexible time period selection for historical analysis
+
+### Alert Configuration
+
+- **Performance Alerts**: Response time degradation, error rate spikes
+- **Business Alerts**: Inventory thresholds, order volume anomalies
+- **System Alerts**: Resource exhaustion, service unavailability
+
+*Add your Grafana dashboard screenshots here*
+
+---
 
 **Available Dashboards:**
 - **Application Overview**: Request metrics, error rates, response times

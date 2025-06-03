@@ -33,16 +33,6 @@ const router = Router();
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/HealthStatus'
- *             example:
- *               isSuccess: true
- *               data:
- *                 status: "healthy"
- *                 timestamp: "2025-06-02T12:00:00.000Z"
- *                 correlationId: "123e4567-e89b-12d3-a456-426614174000"
- *                 service: "SCOMS Backend"
- *                 version: "1.0.0"
- *                 environment: "development"
- *               errorDetails: null
  *       500:
  *         $ref: '#/components/responses/500'
  */
@@ -54,8 +44,8 @@ router.get(
       timestamp: new Date().toISOString(),
       correlationId: req.correlationId,
       service: 'SCOMS Backend',
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version ?? '1.0.0',
+      environment: process.env.NODE_ENV ?? 'development',
     };
 
     res.status(StatusCodes.OK).json(successResponse(health));
@@ -96,39 +86,6 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/DetailedHealthStatus'
- *             example:
- *               isSuccess: true
- *               data:
- *                 status: "healthy"
- *                 timestamp: "2025-06-02T12:00:00.000Z"
- *                 correlationId: "123e4567-e89b-12d3-a456-426614174000"
- *                 service: "SCOMS Backend"
- *                 version: "1.0.0"
- *                 environment: "development"
- *                 responseTime: 45
- *                 dependencies:
- *                   database:
- *                     status: "healthy"
- *                     latency: 12
- *                     type: "PostgreSQL"
- *                   consul:
- *                     status: "healthy"
- *                     latency: 8
- *                     type: "Configuration Management"
- *                 metrics:
- *                   errors:
- *                     healthStatus: "healthy"
- *                     totalErrors: 0
- *                     errorRate: 0.0
- *                   uptime: 86400.5
- *                   memory:
- *                     used: 45
- *                     total: 128
- *                     external: 12
- *                   cpu:
- *                     user: 156789
- *                     system: 45632
- *               errorDetails: null
  *       503:
  *         description: Service is unhealthy - critical dependencies unavailable
  *         content:
@@ -140,17 +97,6 @@ router.get(
  *                   properties:
  *                     data:
  *                       $ref: '#/components/schemas/DetailedHealthStatus'
- *             example:
- *               isSuccess: true
- *               data:
- *                 status: "unhealthy"
- *                 timestamp: "2025-06-02T12:00:00.000Z"
- *                 dependencies:
- *                   database:
- *                     status: "unhealthy"
- *                     latency: 0
- *                     type: "PostgreSQL"
- *               errorDetails: null
  *       500:
  *         $ref: '#/components/responses/500'
  */
@@ -184,7 +130,7 @@ router.get(
 
     try {
       const consulStart = Date.now();
-      await consulService.getOrderConfig(); // Simple check to see if Consul is accessible
+      consulService.getOrderConfig(); // Simple check to see if Consul is accessible
       consulLatency = Date.now() - consulStart;
 
       if (consulLatency > 1000) {
@@ -219,8 +165,8 @@ router.get(
       timestamp: new Date().toISOString(),
       correlationId: req.correlationId,
       service: 'SCOMS Backend',
-      version: process.env.npm_package_version || '1.0.0',
-      environment: process.env.NODE_ENV || 'development',
+      version: process.env.npm_package_version ?? '1.0.0',
+      environment: process.env.NODE_ENV ?? 'development',
       responseTime: Date.now() - startTime,
       dependencies: {
         database: {
@@ -286,9 +232,6 @@ router.get(
  *                   format: date-time
  *                   example: "2025-06-02T12:00:00.000Z"
  *                   description: "Check timestamp"
- *             example:
- *               status: "ready"
- *               timestamp: "2025-06-02T12:00:00.000Z"
  *       503:
  *         description: Service is not ready - database unavailable
  *         content:
@@ -309,10 +252,6 @@ router.get(
  *                   type: string
  *                   example: "Database not available"
  *                   description: "Reason for not being ready"
- *             example:
- *               status: "not ready"
- *               timestamp: "2025-06-02T12:00:00.000Z"
- *               reason: "Database not available"
  */
 router.get(
   '/ready',
@@ -371,9 +310,6 @@ router.get(
  *                   format: date-time
  *                   example: "2025-06-02T12:00:00.000Z"
  *                   description: "Check timestamp"
- *             example:
- *               status: "alive"
- *               timestamp: "2025-06-02T12:00:00.000Z"
  */
 router.get('/live', (req: Request, res: Response) => {
   res.status(StatusCodes.OK).json({
