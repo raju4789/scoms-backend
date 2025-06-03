@@ -497,4 +497,4 @@ For detailed API documentation, visit the interactive Swagger UI at `/api-docs` 
 - **Cache Strategies**: Cache invalidation strategies for maintaining data consistency
 - **Performance Optimization**: Response time optimization for frequently accessed data and warehouse lookups
 
-**Contributing**: We welcome contributions! Check our [Contributing Guide](CONTRIBUTING.md) for development setup and submission guidelines.
+
