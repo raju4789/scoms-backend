@@ -14,7 +14,7 @@ export async function connectDB(config: {
     await dbClient.connect();
     logger.info('Connected to PostgreSQL');
   } catch (err) {
-    logger.error({ err }, 'PostgreSQL connection error');
+    logger.error('PostgreSQL connection error', { err });
     throw err;
   }
   return dbClient;

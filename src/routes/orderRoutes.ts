@@ -67,7 +67,7 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await orderService.getOrders();
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -163,7 +163,7 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await orderService.getOrderById(req.params.id);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -282,7 +282,7 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await orderService.verifyOrder(req.body);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -414,7 +414,7 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await orderService.submitOrder(req.body);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 export default router;

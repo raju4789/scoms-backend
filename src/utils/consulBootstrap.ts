@@ -40,7 +40,7 @@ const devConfig = {
   'scoms/development/config/database/port': process.env.DB_PORT || '5432',
   'scoms/development/config/database/username': process.env.DB_USERNAME || 'postgres',
   'scoms/development/config/database/password': process.env.DB_PASSWORD || 'postgres',
-  'scoms/development/config/database/database': process.env.DB_NAME || 'scoms',
+  'scoms/development/config/database/database': process.env.DB_NAME || 'scoms_dev',
   'scoms/development/config/database/ssl': 'false', // No SSL for local dev
   'scoms/development/config/database/maxConnections': '10', // Lower connection pool
   'scoms/development/config/database/connectionTimeout': '30000', // Shorter timeout

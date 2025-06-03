@@ -43,40 +43,31 @@ scrape_configs:
         replacement: 'production'
 
     pipeline_stages:
-      # Parse Docker JSON log format
+      # Parse the application's JSON logs directly (no Docker wrapper)
       - json:
-          expressions:
-            log: log
-            stream: stream
-            timestamp: time
-
-      # Try to parse application JSON logs
-      - json:
-          source: log
           expressions:
             level: level
             msg: msg
-            service: service
             method: method
             url: url
             statusCode: statusCode
             duration: duration
             correlationId: correlationId
-            error: error
+            type: type
             pid: pid
             hostname: hostname
-            type: type
-            environment: environment
+            time: time
+            app_environment: environment
 
-      # Use Docker timestamp if app timestamp not available
+      # Use the timestamp from the log entry
       - timestamp:
-          source: timestamp
+          source: time
           format: RFC3339Nano
 
-      # Add only essential labels (avoid high cardinality)
+      # Extract level as a label
       - labels:
           level:
-          application:
-          compose_service:
-          container_name:
-          environment:
+
+      # Output the message field
+      - output:
+          source: msg

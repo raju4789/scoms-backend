@@ -1,358 +1,294 @@
-# 🚀 SCOMS Backend - ScreenCloud Order Management System
+# 🚀 SCOMS Backend - Order Management System
 
-## Project Overview
+[![TypeScript](https://img.shields.io/badge/TypeScript-5.0+-blue.svg)](https://www.typescriptlang.org/)
+[![Node.js](https://img.shields.io/badge/Node.js-18+-green.svg)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Express-4.18+-black.svg)](https://expressjs.com/)
+[![PostgreSQL](https://img.shields.io/badge/PostgreSQL-15+-blue.svg)](https://www.postgresql.org/)
+[![Docker](https://img.shields.io/badge/Docker-Ready-blue.svg)](https://www.docker.com/)
 
-The **ScreenCloud Order Management System (SCOMS) Backend** is a production-ready, enterprise-grade microservice designed to handle complex order fulfillment workflows for device distribution. Built with modern TypeScript and Node.js, this system demonstrates advanced software engineering practices including microservices architecture, distributed configuration management, and comprehensive observability.
+A modern TypeScript-based order management system with intelligent warehouse allocation, dynamic pricing, and real-time inventory management.
 
-### What Makes SCOMS Special?
+## 📖 Overview
 
-SCOMS showcases a sophisticated approach to order management with intelligent warehouse allocation, distance-based shipping calculations, and real-time pricing optimization. The system is designed for scalability, reliability, and maintainability - making it an excellent example of enterprise-level backend development.
+SCOMS (ScreenCloud Order Management System) is a production-ready backend service that handles device ordering with sophisticated business logic. It automatically selects optimal warehouses based on proximity and inventory, applies dynamic volume-based pricing, and provides comprehensive monitoring and observability.
 
-**Key Business Logic:**
-- 📦 **Smart Order Processing**: Automatically allocates orders across multiple warehouses based on inventory and location
-- 💰 **Dynamic Pricing**: Implements tiered discount system (5%, 10%, 15%) with shipping cost optimization
-- 🌍 **Geographic Intelligence**: Calculates shipping costs based on distance from nearest warehouses
-- 🔄 **Real-time Inventory**: Tracks and updates warehouse stock levels across all facilities
-
----
+**Core Capabilities:**
+- Intelligent warehouse selection using geolocation algorithms
+- Dynamic pricing with configurable volume discounts (5-20%)
+- Real-time inventory management across multiple locations
+- Production-grade monitoring, logging, and metrics
+- RESTful APIs with interactive documentation
+- Containerized deployment with Docker
 
 ## ✨ Key Features
 
-### 🎯 Core Business Features
-- **🛒 Advanced Order Management**
-  - Multi-warehouse allocation algorithm
-  - Real-time pricing calculation with bulk discounts
-  - Distance-based shipping cost optimization
-  - Order verification before submission
+- **🎯 Smart Warehouse Selection**: Automatically finds closest warehouse with available inventory using geolocation
+- **💰 Dynamic Pricing Engine**: Volume-based discounts (5-20%) with configurable business rules
+- **📊 Real-time Inventory**: Live stock tracking across multiple warehouses
+- **🔧 Production Ready**: Complete monitoring stack with Prometheus, Grafana, and structured logging
+- **🔒 Enterprise Security**: API key authentication with role-based permissions
+- **📚 API Documentation**: Interactive Swagger/OpenAPI documentation
+- **🐳 Docker Ready**: Full containerization with development and production configurations
 
-- **🏭 Intelligent Warehouse Management**
-  - Geographic-based inventory tracking
-  - Real-time stock level monitoring
-  - Location-aware order fulfillment
-  - Inventory allocation optimization
+## 🚀 Quick Start
 
-- **💵 Dynamic Pricing Engine**
-  - Base price: $100 per device
-  - Bulk discounts: 5% (10-24), 10% (25-49), 15% (50+)
-  - Distance-based shipping calculations
-  - 15% shipping cap on order total
+### 📋 Prerequisites
 
-### 🛡️ Enterprise Security & Operations
-- **🔐 API Key Authentication**
-  - Role-based permission system (`orders:read`, `orders:write`, `warehouses:*`)
-  - Service-to-service authentication
-  - Consul-managed API key configuration
+- **Node.js** 18+ with npm 9+
+- **Docker** & Docker Compose
+- **Git** for version control
 
-- **⚙️ Advanced Configuration Management**
-  - Consul-based centralized configuration
-  - Hot-reload capabilities without service restart
-  - Environment-specific configuration management
+### ⚡ Development Setup (Recommended)
 
-- **📊 Production-Ready Observability**
-  - Prometheus metrics collection
-  - Correlation ID request tracing
-  - Structured logging with multiple levels
-  - Health checks for Kubernetes deployment
-
-### 🔧 Developer Experience
-- **🧪 Comprehensive Testing**
-  - Unit tests with Jest
-  - Repository layer testing
-  - High test coverage standards
-
-- **📝 API Documentation**
-  - Interactive Swagger/OpenAPI documentation
-  - Request/response examples
-  - Comprehensive endpoint documentation
-
-- **🏗️ Modern Architecture**
-  - Clean architecture with separation of concerns
-  - TypeORM for database operations
-  - Express.js with TypeScript
-  - Docker containerization
-
----
-
-## Table of Contents
-- [Tech Stack](#tech-stack)
-- [Architecture](#architecture)
-- [Getting Started](#getting-started)
-- [Environment Variables](#environment-variables)
-- [Database & Consul Setup](#database--consul-setup)
-- [Running the Application](#running-the-application)
-- [Authentication](#authentication)
-- [API Endpoints](#api-endpoints)
-- [Configuration Management](#configuration-management)
-- [Development](#development)
-- [Testing](#testing)
-- [Code Quality](#code-quality)
-- [Observability](#observability)
-- [API Documentation](#api-documentation)
-- [Troubleshooting](#troubleshooting)
-- [Contributing](#contributing)
-- [Future Enhancements](#future-enhancements)
-
----
-
-## Tech Stack
-
-### Core Technologies
-- **Node.js** 18+ with TypeScript
-- **Express.js** - Web framework
-- **PostgreSQL** - Primary database with TypeORM
-- **Consul** - Configuration management and service discovery
-- **Jest** - Testing framework with comprehensive coverage
-
-### Development & Operations
-- **Docker & Docker Compose** - Containerization
-- **ESLint & Prettier** - Code quality and formatting
-- **Swagger/OpenAPI** - API documentation
-- **Prometheus** - Metrics collection
-- **Grafana** - Monitoring dashboards
-- **Loki** - Log aggregation
-
-## Architecture
-
-```
-src/
-├── index.ts                 # Main application entry point
-├── config/                  # Configuration management
-│   ├── consul.ts           # Consul service integration
-│   ├── data-source-consul.ts # Database configuration via Consul
-│   └── swagger.ts          # API documentation setup
-├── middleware/              # Express middleware
-│   ├── auth.ts             # API key authentication
-│   ├── correlationId.ts    # Request correlation tracking
-│   ├── errorHandler.ts     # Centralized error handling
-│   ├── metrics.ts          # Prometheus metrics collection
-│   ├── requestLogger.ts    # Request/response logging
-│   └── validation.ts       # Input validation and sanitization
-├── routes/                  # API route definitions
-│   ├── healthRoutes.ts     # Health check endpoints
-│   ├── orderRoutes.ts      # Order management APIs
-│   └── warehouseRoutes.ts  # Warehouse management APIs
-├── services/                # Business logic layer
-│   ├── authService.ts      # Authentication service
-│   ├── orderService.ts     # Order business logic
-│   ├── warehouseService.ts # Warehouse business logic
-│   └── errorMetricsService.ts # Error tracking and metrics
-├── models/                  # TypeORM entity models
-│   ├── Order.ts            # Order entity
-│   └── Warehouse.ts        # Warehouse entity
-├── repositories/            # Data access layer
-│   ├── orderRepository.ts  # Order data operations
-│   └── warehouseRepository.ts # Warehouse data operations
-├── types/                   # TypeScript type definitions
-├── utils/                   # Utility functions and helpers
-└── errors/                  # Custom error definitions
-```
-
-## Getting Started
-
-### Prerequisites
-- [Node.js](https://nodejs.org/) 18+
-- [npm](https://www.npmjs.com/) 9+
-- [Docker](https://www.docker.com/) & [Docker Compose](https://docs.docker.com/compose/)
-
-### Installation
 ```bash
-# Clone the repository
-git clone <repository-url>
+# 1. Clone and install dependencies
+git clone https://github.com/raju4789/scoms-backend.git
 cd scoms-backend
-
-# Install dependencies
 npm ci
-```
 
-## Environment Variables
-
-Before running the application, you'll need to set up the following environment variables. You can create a `.env` file in the root directory:
-
-```bash
-# Database Configuration
-DB_HOST=localhost
-DB_PORT=5432
-DB_USERNAME=postgres
-DB_PASSWORD=postgres
-DB_NAME=scoms
-DB_SSL=false
-
-# Consul Configuration
-CONSUL_HOST=localhost
-CONSUL_PORT=8500
-
-# Application Configuration
-NODE_ENV=development
-PORT=3000
-LOG_LEVEL=info
-
-# Device Configuration (optional - defaults provided)
-DEVICE_PRICE=150
-DEVICE_WEIGHT_KG=0.365
-SHIPPING_RATE_PER_KG_KM=0.01
-SHIPPING_COST_THRESHOLD_PERCENT=0.15
-```
-
-## Database & Consul Setup
-
-The SCOMS backend requires PostgreSQL and HashiCorp Consul to be running. These dependencies are managed through Docker Compose for easy setup and consistent environments.
-
-**Services:**
-- **PostgreSQL**: `localhost:5432`
-- **Consul**: `localhost:8500` (UI available at http://localhost:8500/ui)
-
-## Running the Application
-
-### Development Mode
-```bash
-# Start dependencies
+# 2. Start infrastructure services (PostgreSQL, Consul, Monitoring)
 npm run docker:dev
 
-# Start server with hot reload
+# 3. Start application with hot reload
 npm run dev:watch
-
-# Or start server without hot reload
-npm run dev
 ```
 
-### Production Mode
+### 🏭 Production Setup
+
 ```bash
-# Start all services including the application
+# Start complete production environment
 npm run docker:prod
 ```
 
-### Available Scripts
-```bash
-npm run dev              # Start in development mode
-npm run dev:watch        # Start with hot reload
-npm run build            # Compile TypeScript
-npm start                # Start compiled application
-npm run docker:dev       # Start dev dependencies
-npm run docker:prod      # Start prod dependencies
-npm run docker:down:dev  # Stop dev containers
-npm run docker:down      # Stop prod containers
-npm test                 # Run tests
-npm run test:coverage    # Run tests with coverage
-npm run lint:check       # Check code quality
-npm run format:check     # Check code formatting
-```
+### 🔗 Service URLs
 
-## Authentication
+**Development:**
+- **API Server**: http://localhost:3000 (with hot reload)
+- **API Documentation**: http://localhost:3000/api-docs
+- **Grafana Dashboards**: http://localhost:3001 (admin/admin)
+- **Consul Configuration**: http://localhost:8500/ui
+- **PostgreSQL**: localhost:5432 (database: `scoms_dev`)
 
-The SCOMS API uses API key authentication with role-based permissions.
+**Production:**
+- **API Server**: http://localhost:3000
+- **Monitoring Dashboard**: http://localhost:3001
+- **Configuration Management**: http://localhost:8500/ui
 
-### API Key Configuration
-API keys are managed through Consul at the key `scoms/auth/config`. Default keys include:
-
-- **Frontend Key**: `scoms-frontend-key`
-  - Permissions: `orders:read`, `orders:write`, `warehouses:read`
-- **Admin Key**: `scoms-admin-key`
-  - Permissions: `*` (all operations)
-- **Warehouse Service Key**: `scoms-warehouse-service-key`
-  - Permissions: `warehouses:read`, `warehouses:write`, `orders:read`
-
-### Using API Keys
-Include the API key in the `Authorization` header:
+## 🧪 Quick API Test
 
 ```bash
-# Using Bearer token
+# Health check
+curl http://localhost:3000/health
+
+# Test order pricing with volume discount
 curl -H "Authorization: Bearer scoms-frontend-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "deviceQuantity": 50,
+       "customerLocation": {"latitude": 40.7128, "longitude": -74.0060}
+     }' \
+     http://localhost:3000/api/v1/orders/verify
+
+# Create an actual order
+curl -H "Authorization: Bearer scoms-frontend-key" \
+     -H "Content-Type: application/json" \
+     -d '{
+       "deviceQuantity": 25,
+       "customerLocation": {"latitude": 37.7749, "longitude": -122.4194}
+     }' \
      http://localhost:3000/api/v1/orders
 
-# Using x-api-key header
-curl -H "x-api-key: scoms-frontend-key" \
-     http://localhost:3000/api/v1/orders
+# List available warehouses
+curl -H "Authorization: Bearer scoms-frontend-key" \
+     http://localhost:3000/api/v1/warehouses
 ```
 
-### Permission Levels
-- **orders:read** - View orders and verify pricing
-- **orders:write** - Submit new orders
-- **warehouses:read** - View warehouse information
-- **warehouses:write** - Manage warehouse inventory
-- **\*** - All permissions (admin access)
+## 🏗️ Architecture Overview
 
-## API Endpoints
+SCOMS follows clean architecture principles with clear separation of concerns:
 
-### Base URL
-`http://localhost:3000/api/v1`
-
-### Orders API
-- `GET /orders` - List all orders (requires `orders:read`)
-- `GET /orders/{id}` - Get specific order (requires `orders:read`)
-- `POST /orders/verify` - Verify order pricing (requires `orders:read`)
-- `POST /orders/submit` - Submit new order (requires `orders:write`)
-
-### Warehouses API
-- `GET /warehouses` - List all warehouses (requires `warehouses:read`)
-- `GET /warehouses/{id}` - Get specific warehouse (requires `warehouses:read`)
-- `POST /warehouses` - Create warehouse (requires `warehouses:write`)
-- `PUT /warehouses/{id}` - Update warehouse (requires `warehouses:write`)
-- `DELETE /warehouses/{id}` - Delete warehouse (requires `warehouses:write`)
-
-### Health Endpoints
-- `GET /health` - Basic health check
-- `GET /health/detailed` - Comprehensive health check with dependencies
-- `GET /ready` - Kubernetes readiness probe
-- `GET /live` - Kubernetes liveness probe
-
-### Monitoring
-- `GET /metrics` - Prometheus metrics endpoint
-
-### Order Pricing Logic
-- **Base Price**: $150 per device (configurable via Consul)
-- **Bulk Discounts**:
-  - 25-49 devices: 5% discount
-  - 50-99 devices: 10% discount
-  - 100+ devices: 15% discount
-- **Shipping**: Distance-based from nearest warehouse
-- **Shipping Cap**: Maximum 15% of order total (after discount)
-
-## Configuration Management
-
-SCOMS uses Consul for centralized configuration management with hot-reload capabilities.
-
-### Configuration Structure
 ```
-scoms/
-├── server/              # Server configuration
-├── database/            # Database settings
-├── auth/                # Authentication configuration
-├── orders/              # Order processing settings
-└── warehouses/          # Warehouse management settings
+┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Client Apps   │    │   Monitoring    │    │  Configuration  │
+│  (Frontend/API) │    │   (Grafana)     │    │    (Consul)     │
+└─────────────────┘    └─────────────────┘    └─────────────────┘
+         │                       │                       │
+         ▼                       ▼                       ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                     Express Middleware Layer                    │
+│  Auth │ Validation │ Logging │ Metrics │ Error Handling        │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      Service Layer                              │
+│  Order Service │ Warehouse Service │ Auth Service              │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                    Repository Layer                             │
+│  Order Repository │ Warehouse Repository                       │
+└─────────────────────────────────────────────────────────────────┘
+         │
+         ▼
+┌─────────────────────────────────────────────────────────────────┐
+│                      PostgreSQL Database                        │
+└─────────────────────────────────────────────────────────────────┘
 ```
 
-### Accessing Configuration
+### Key Design Patterns
+
+- **Repository Pattern**: Clean data access abstraction
+- **Service Layer**: Business logic encapsulation
+- **Middleware Pipeline**: Cross-cutting concerns (auth, logging, metrics)
+- **Configuration as Code**: External configuration via Consul
+- **Request Correlation**: End-to-end request tracing
+
+## 🛠️ Technology Stack
+
+**Backend Framework:**
+- **TypeScript** 5.0+ - Type-safe development
+- **Express.js** 4.18+ - Web application framework
+- **Node.js** 18+ - Runtime environment
+
+**Database & Storage:**
+- **PostgreSQL** 15+ - Primary database with ACID compliance
+- **TypeORM** - Object-relational mapping with decorators
+
+**Configuration & Service Discovery:**
+- **Consul** - Dynamic configuration management and service discovery
+- **🔥 Hot Configuration Reload** - Real-time configuration updates without server restarts
+  - Configuration changes apply instantly across all service instances
+  - Zero-downtime updates for pricing rules, discount rates, and business logic
+  - Live environment switching and feature flag management
+  - Automatic configuration validation and rollback on errors
+
+**Monitoring & Observability:**
+- **Prometheus** - Metrics collection and alerting
+- **Grafana** - Data visualization and dashboards
+- **Structured Logging** - JSON-formatted logs with correlation IDs
+
+**Development & Deployment:**
+- **Docker** & **Docker Compose** - Containerization
+- **Jest** - Unit and integration testing
+- **ESLint** - Code quality and consistency
+- **Swagger/OpenAPI** - API documentation
+
+## 🔐 Authentication & Security
+
+### API Key Authentication
+
+All API endpoints require authentication via API key in the Authorization header:
+
 ```bash
-# View all SCOMS configuration
-curl http://localhost:8500/v1/kv/scoms/?recurse
-
-# View authentication configuration
-curl http://localhost:8500/v1/kv/scoms/auth/config
+Authorization: Bearer scoms-frontend-key
 ```
 
-## Development
+### Available API Keys
 
-### Project Structure
-- **Routes**: API endpoint definitions with Swagger documentation
-- **Services**: Business logic and domain operations
-- **Repositories**: Data access layer with TypeORM
-- **Middleware**: Cross-cutting concerns (auth, validation, logging)
-- **Models**: TypeORM entities and database schema
-- **Utils**: Helper functions and utilities
+- `scoms-frontend-key` - Frontend application access
+- `scoms-admin-key` - Administrative operations
+- `scoms-monitoring-key` - Monitoring and health checks
 
-### Adding New Features
-1. Define routes in `src/routes/`
-2. Implement business logic in `src/services/`
-3. Add data access in `src/repositories/`
-4. Include comprehensive tests
-5. Update API documentation
+### Security Features
 
-### Database Schema
-The database schema is automatically managed through the Docker setup. The TypeORM entities (`Order` and `Warehouse`) define the schema structure, and the database is initialized when the containers start.
+- **Request Rate Limiting** - Prevents API abuse
+- **Input Validation** - Comprehensive request validation
+- **SQL Injection Protection** - TypeORM parameterized queries
+- **CORS Configuration** - Cross-origin request security
+- **Security Headers** - Helmet.js security middleware
 
-## Testing
+## 📊 API Documentation
+
+### Core Endpoints
+
+| Method | Endpoint | Description | Auth Required |
+|--------|----------|-------------|---------------|
+| `GET` | `/health` | Service health check | ❌ |
+| `GET` | `/api/v1/warehouses` | List all warehouses | ✅ |
+| `POST` | `/api/v1/orders/verify` | Verify order pricing | ✅ |
+| `POST` | `/api/v1/orders` | Create new order | ✅ |
+| `GET` | `/api/v1/orders/:id` | Get order details | ✅ |
+
+### Request/Response Examples
+
+**Order Verification:**
+```json
+POST /api/v1/orders/verify
+{
+  "deviceQuantity": 50,
+  "customerLocation": {
+    "latitude": 40.7128,
+    "longitude": -74.0060
+  }
+}
+
+Response:
+{
+  "deviceQuantity": 50,
+  "unitPrice": 150.00,
+  "discount": 10.0,
+  "subtotal": 6750.00,
+  "shippingCost": 125.50,
+  "totalPrice": 6875.50,
+  "selectedWarehouse": {
+    "id": "wh-001",
+    "name": "New York Warehouse",
+    "distance": 15.3
+  }
+}
+```
+
+**Error Response Format:**
+```json
+{
+  "error": {
+    "code": "VALIDATION_ERROR",
+    "message": "Invalid device quantity",
+    "details": ["Device quantity must be between 1 and 1000"]
+  },
+  "correlationId": "req-12345"
+}
+```
+
+## 💰 Business Logic
+
+### Dynamic Pricing Algorithm
+
+Base device price: **$150** (configurable via Consul)
+
+**Volume Discount Tiers:**
+- 1-24 devices: **0%** discount
+- 25-49 devices: **5%** discount
+- 50-99 devices: **10%** discount
+- 100-249 devices: **15%** discount
+- 250+ devices: **20%** discount
+
+### Warehouse Selection Logic
+
+1. **Distance Calculation**: Uses Haversine formula for accurate geographic distance
+2. **Inventory Check**: Verifies sufficient stock at each warehouse
+3. **Optimal Selection**: Chooses nearest warehouse with adequate inventory
+4. **Fallback Strategy**: Multi-warehouse allocation if needed
+
+### Shipping Cost Calculation
+
+- **Rate**: $0.01 per kg per km (configurable)
+- **Device Weight**: 0.365kg per device
+- **Cap**: Maximum 15% of order subtotal
+- **Distance**: Great-circle distance between customer and warehouse
+
+## 🧪 Testing Strategy
+
+### Test Coverage
+
+- **Unit Tests**: Service layer and utility functions
+- **Integration Tests**: API endpoints and database operations
+- **Repository Tests**: Data access layer validation
 
 ### Running Tests
+
 ```bash
 # Run all tests
 npm test
@@ -360,196 +296,205 @@ npm test
 # Run tests with coverage
 npm run test:coverage
 
-# Run tests in watch mode (development)
-npm test -- --watch
+# Run tests in watch mode
+npm run test:watch
+
+# Run specific test file
+npm test -- orderService.test.ts
 ```
 
-### Test Structure
-- **Unit Tests**: Individual function and method testing
-- **Integration Tests**: API endpoint testing with mocked dependencies
-- **Repository Tests**: Database operation testing
-- **Route Tests**: HTTP endpoint testing with supertest
-- **Service Tests**: Business logic and validation testing
+### Test Environment
 
-### Test Coverage
+Tests run against an in-memory SQLite database for fast execution and isolation.
 
-The project maintains comprehensive test coverage across all modules:
+## 🐳 Docker Configuration
 
-| Module | Coverage | Status |
-|--------|----------|--------|
-| **Routes** | 100% | ✅ Excellent |
-| **Models** | 100% | ✅ Excellent |
-| **Repositories** | 95.74% | ✅ Very Good |
-| **Utils** | 90.2% | ✅ Very Good |
-| **Middleware** | 80.76% | ✅ Good |
-| **Services** | 68.75% | ⚠️ Moderate |
-| **Config** | 17.98% | ❌ Needs Improvement |
+### Development Environment
 
-**Overall Coverage**: 69.62% statements, 52.96% branches, 65.8% functions
-
-### Coverage Reports
-- **HTML Report**: Open `coverage/lcov-report/index.html` for detailed visual coverage analysis
-- **LCOV Format**: `coverage/lcov.info` for CI/CD integration
-- **JSON Format**: `coverage/coverage-final.json` for programmatic access
-
-## Code Quality
-
-### Linting and Formatting
 ```bash
-# Check code quality
-npm run lint:check
+# Start development services
+npm run docker:dev
 
-# Fix linting issues
-npm run lint
-
-# Check formatting
-npm run format:check
-
-# Fix formatting
-npm run format
+# Services included:
+# - PostgreSQL database
+# - Consul configuration server
+# - Prometheus metrics collection
+# - Grafana dashboards
 ```
 
-### Quality Standards
-- ESLint configuration with TypeScript support
-- Prettier for consistent code formatting
-- SonarCloud integration for continuous quality monitoring
-- Comprehensive test coverage requirements
+### Production Environment
 
-## Observability
+```bash
+# Start production environment
+npm run docker:prod
 
-### Monitoring Stack
-The `observability/` directory contains configuration for:
+# Additional production features:
+# - Application container
+# - Health checks
+# - Resource limits
+# - Restart policies
+```
 
-- **Prometheus**: Metrics collection and alerting
-- **Grafana**: Dashboards and visualization
-- **Loki**: Log aggregation and search
-- **Promtail**: Log shipping
+### Docker Commands
 
-### Custom Metrics
-- HTTP request duration and count
-- Error rates by category and severity
-- Database connection health
-- Consul connectivity status
-- Active connections and resource usage
+```bash
+# View running containers
+docker-compose ps
+
+# View application logs
+docker-compose logs scoms-app
+
+# Restart specific service
+docker-compose restart scoms-app
+
+# Stop all services
+docker-compose down
+```
+
+## 📈 Monitoring & Observability
+
+### Metrics Collection
+
+- **Application Metrics**: Request count, response time, error rates
+- **Business Metrics**: Order volume, revenue, warehouse utilization
+- **System Metrics**: CPU, memory, database connections
+
+### Grafana Dashboards
+
+Access Grafana at http://localhost:3001 (admin/admin)
+
+**Available Dashboards:**
+- **Application Overview**: Request metrics, error rates, response times
+- **Business Intelligence**: Order trends, revenue analytics
+- **System Health**: Resource utilization, database performance
 
 ### Logging
-Structured logging with correlation IDs for request tracing across services.
 
-## API Documentation
+Structured JSON logs with correlation IDs for request tracing:
 
-### Swagger Documentation
-Interactive API documentation is available at:
-- **Development**: http://localhost:3000/api-docs
-- **Production**: Configured based on deployment
-
-### Request Examples
-Sample HTTP requests are available in the `rest-client/` directory:
-- `orders.http` - Order management examples
-- `warehouses.http` - Warehouse management examples
-- `health.http` - Health check examples
-
-## Troubleshooting
-
-### Common Issues
-
-#### Database Connection Errors
-```bash
-# Check if PostgreSQL is running
-docker ps | grep postgres
-
-# Restart database container
-docker-compose restart postgres
-
-# Check database logs
-docker-compose logs postgres
+```json
+{
+  "timestamp": "2025-06-03T10:30:00.000Z",
+  "level": "info",
+  "message": "Order created successfully",
+  "correlationId": "req-12345",
+  "orderId": "ord-67890",
+  "customerId": "cust-456",
+  "totalPrice": 6875.50
+}
 ```
 
-#### Consul Connection Issues
+## 🔧 Development Guide
+
+### Local Development
+
 ```bash
-# Check Consul status
-curl http://localhost:8500/v1/status/leader
+# Install dependencies
+npm ci
 
-# Restart Consul
-docker-compose restart consul
+# Start development server with hot reload
+npm run dev:watch
 
-# Access Consul UI
-open http://localhost:8500/ui
+# Run linting
+npm run lint
+
+# Fix linting issues
+npm run lint:fix
+
+# Build for production
+npm run build
 ```
 
-#### Port Conflicts
-```bash
-# Check what's using port 3000
-lsof -i :3000
+### Environment Variables
 
-# Kill process using port
-kill -9 $(lsof -t -i:3000)
+Key configuration via Consul, but some local overrides available:
+
+```bash
+# Database connection (optional override)
+DATABASE_URL=postgresql://user:pass@localhost:5432/scoms_dev
+
+# Log level (optional)
+LOG_LEVEL=debug
+
+# Port (optional)
+PORT=3000
 ```
 
-#### Authentication Errors
-- Verify API key in Consul: http://localhost:8500/ui/dc1/kv/scoms/auth/config
-- Check API key format and permissions
-- Ensure proper header format: `Authorization: Bearer your-api-key`
+## Project Structure
 
-### Health Check Commands
-```bash
-# Basic health check
-curl http://localhost:3000/health
-
-# Detailed health check
-curl http://localhost:3000/health/detailed
-
-# Readiness check
-curl http://localhost:3000/ready
+```
+src/
+├── config/                  # Configuration management
+│   ├── consul.ts           # Consul integration
+│   ├── data-source-consul.ts # Database config
+│   └── swagger.ts          # API documentation
+├── middleware/             # Express middleware
+│   ├── auth.ts            # Authentication
+│   ├── correlationId.ts   # Request tracing
+│   ├── errorHandler.ts    # Error handling
+│   ├── metrics.ts         # Prometheus metrics
+│   ├── requestLogger.ts   # Structured logging
+│   └── validation.ts      # Input validation
+├── routes/                # API endpoints
+│   ├── healthRoutes.ts    # Health checks
+│   ├── orderRoutes.ts     # Order management
+│   └── warehouseRoutes.ts # Warehouse operations
+├── services/              # Business logic layer
+│   ├── authService.ts     # Authentication logic
+│   ├── orderService.ts    # Order processing
+│   └── warehouseService.ts # Warehouse management
+├── models/                # Database entities
+│   ├── Order.ts          # Order entity
+│   └── Warehouse.ts      # Warehouse entity
+├── repositories/          # Data access layer
+│   ├── orderRepository.ts # Order CRUD operations
+│   └── warehouseRepository.ts # Warehouse operations
+├── utils/                 # Utility functions
+│   ├── orderUtils.ts     # Pricing algorithms
+│   └── logger.ts         # Logging utilities
+└── types/                 # TypeScript definitions
+    ├── AuthTypes.ts      # Authentication types
+    └── OrderServiceTypes.ts # Order types
 ```
 
-## Contributing
+## 🚀 Getting Started Checklist
 
-1. **Fork and Branch**: Create a feature branch from `main`
-2. **Code Standards**: Follow ESLint and Prettier configurations
-3. **Testing**: Add comprehensive tests for new features
-4. **Documentation**: Update API documentation and README as needed
-5. **Quality**: Ensure all quality checks pass before submitting PR
+- [ ] Install Node.js 18+ and Docker
+- [ ] Clone the repository
+- [ ] Run `npm ci` to install dependencies
+- [ ] Start services with `npm run docker:dev`
+- [ ] Start development server with `npm run dev:watch`
+- [ ] Visit http://localhost:3000/api-docs for API documentation
+- [ ] Test the API with the provided curl commands
+- [ ] Check monitoring at http://localhost:3001
 
-### Pull Request Process
-1. Ensure CI/CD pipeline passes
-2. Include comprehensive tests
-3. Update documentation
-4. Follow conventional commit messages
-5. Request review from maintainers
-
-### Development Guidelines
-- Use TypeScript strict mode
-- Follow SOLID principles
-- Implement comprehensive error handling
-- Include request/response validation
-- Add appropriate logging and metrics
-
----
+For detailed API documentation, visit the interactive Swagger UI at `/api-docs` when the server is running.
 
 ## 🚀 Future Enhancements
 
-- **🧪 Integration Tests**
-  - Integration testing with real database and external services
-  - End-to-end API testing scenarios
+### 🧪 Integration Tests
+- **Real Database Testing**: Integration testing with real database and external services
+- **End-to-End API Testing**: Complete API testing scenarios covering full user workflows
+- **Service Integration**: Testing interactions between all microservices and external dependencies
 
-- **📊 Improve Test Coverage**
-  - Comprehensive test coverage improvements (target: 90%+)
-  - Enhanced unit and integration test suites
+### 📊 Improve Test Coverage
+- **Comprehensive Coverage**: Comprehensive test coverage improvements (target: 90%+)
+- **Enhanced Test Suites**: Enhanced unit and integration test suites with better assertions
+- **Code Quality Gates**: Automated coverage enforcement in CI/CD pipeline
 
-- **🔐 Integrate Vault for Secrets**
-  - HashiCorp Vault integration for secrets management
-  - Secret rotation and management automation
+### 🔐 Integrate Vault for Secrets
+- **HashiCorp Vault**: HashiCorp Vault integration for centralized secrets management
+- **Secret Rotation**: Secret rotation and management automation for enhanced security
+- **Dynamic Secrets**: Dynamic database credentials and API key management
 
-- **📈 Improve Grafana Dashboards**
-  - Enhanced Grafana dashboards with business metrics
-  - Interactive dashboard templates for different stakeholders
-  - Real-time performance monitoring and alerting
+### 📈 Improve Grafana Dashboards
+- **Business Metrics**: Enhanced Grafana dashboards with comprehensive business metrics
+- **Stakeholder Templates**: Interactive dashboard templates for different stakeholders (operations, business, development)
+- **Real-time Monitoring**: Real-time performance monitoring and intelligent alerting systems
 
-- **⚡ Caching Implementation**
-  - Redis-based caching for API endpoints
-  - Cache invalidation strategies for data consistency
-  - Response time optimization for frequently accessed data
+### ⚡ Caching Implementation
+- **Redis Integration**: Redis-based caching for high-frequency API endpoints
+- **Cache Strategies**: Cache invalidation strategies for maintaining data consistency
+- **Performance Optimization**: Response time optimization for frequently accessed data and warehouse lookups
 
----
-
-**SCOMS Backend** - A sophisticated foundation for building scalable, enterprise-grade order management solutions with modern software engineering practices.
+**Contributing**: We welcome contributions! Check our [Contributing Guide](CONTRIBUTING.md) for development setup and submission guidelines.

@@ -76,7 +76,7 @@ router.get(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await warehouseService.getWarehouses();
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -165,7 +165,7 @@ router.get(
     const id = Number(req.params.id);
     const result = await warehouseService.getWarehouseById(id);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -277,7 +277,7 @@ router.post(
   asyncHandler(async (req: AuthenticatedRequest, res: Response) => {
     const result = await warehouseService.createWarehouse(req.body);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -419,7 +419,7 @@ router.put(
     const id = Number(req.params.id);
     const result = await warehouseService.updateWarehouse(id, req.body);
     res.json(successResponse(result));
-  }),
+  })
 );
 
 /**
@@ -513,7 +513,7 @@ router.delete(
     const id = Number(req.params.id);
     await warehouseService.deleteWarehouse(id);
     res.json(successResponse(null));
-  }),
+  })
 );
 
 export default router;

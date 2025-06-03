@@ -17,14 +17,14 @@ import {
  * @throws AppError if validation fails
  */
 export const createWarehouse = async (data: CreateWarehouseInput): Promise<Warehouse> => {
-  logger.info({ event: 'createWarehouse', data }, 'Service: createWarehouse called');
+  logger.info('Service: createWarehouse called', { event: 'createWarehouse', data });
   validateCreateWarehouseInput(data);
   try {
     const warehouse = await warehouseRepository.createWarehouse(data);
     recordWarehouseOperation('create', warehouse.id.toString());
     return warehouse;
   } catch (error) {
-    logger.error({ event: 'createWarehouse', error }, 'Failed to create warehouse');
+    logger.error('Failed to create warehouse', { event: 'createWarehouse', error });
     recordError('warehouse_creation_failed', 'error');
     throw error;
   }
@@ -35,7 +35,7 @@ export const createWarehouse = async (data: CreateWarehouseInput): Promise<Wareh
  * @returns Array of Warehouse
  */
 export const getWarehouses = async (): Promise<Warehouse[]> => {
-  logger.info({ event: 'getWarehouses' }, 'Service: getWarehouses called');
+  logger.info('Service: getWarehouses called', { event: 'getWarehouses' });
   return warehouseRepository.getWarehouses();
 };
 
@@ -46,7 +46,7 @@ export const getWarehouses = async (): Promise<Warehouse[]> => {
  * @throws AppError if id is invalid
  */
 export const getWarehouseById = async (id: number): Promise<Warehouse | null> => {
-  logger.info({ event: 'getWarehouseById', id }, 'Service: getWarehouseById called');
+  logger.info('Service: getWarehouseById called', { event: 'getWarehouseById', id });
   validateWarehouseId(id);
   return warehouseRepository.getWarehouseById(id);
 };
@@ -60,9 +60,9 @@ export const getWarehouseById = async (id: number): Promise<Warehouse | null> =>
  */
 export const updateWarehouse = async (
   id: number,
-  data: UpdateWarehouseInput,
+  data: UpdateWarehouseInput
 ): Promise<Warehouse> => {
-  logger.info({ event: 'updateWarehouse', id, data }, 'Service: updateWarehouse called');
+  logger.info('Service: updateWarehouse called', { event: 'updateWarehouse', id, data });
   validateWarehouseId(id);
   validateUpdateWarehouseInput(data);
   try {
@@ -72,7 +72,7 @@ export const updateWarehouse = async (
     }
     return updated;
   } catch (error) {
-    logger.error({ event: 'updateWarehouse', error }, 'Failed to update warehouse');
+    logger.error('Failed to update warehouse', { event: 'updateWarehouse', error });
     throw error;
   }
 };
@@ -83,12 +83,12 @@ export const updateWarehouse = async (
  * @throws AppError if id is invalid
  */
 export const deleteWarehouse = async (id: number): Promise<void> => {
-  logger.info({ event: 'deleteWarehouse', id }, 'Service: deleteWarehouse called');
+  logger.info('Service: deleteWarehouse called', { event: 'deleteWarehouse', id });
   validateWarehouseId(id);
   try {
     await warehouseRepository.deleteWarehouse(id);
   } catch (error) {
-    logger.error({ event: 'deleteWarehouse', error }, 'Failed to delete warehouse');
+    logger.error('Failed to delete warehouse', { event: 'deleteWarehouse', error });
     throw error;
   }
 };

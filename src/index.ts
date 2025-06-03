@@ -13,8 +13,8 @@ import { runInitialDataLoad } from './utils/dbBootstrap';
 import { preloadConsulConfig } from './utils/consulBootstrap';
 import { setupSwagger } from './config/swagger';
 
-// Load environment variables from .env file
-dotenv.config();
+// Load environment variables from .env file (only if not already set)
+dotenv.config({ override: false });
 
 async function bootstrap() {
   try {

@@ -25,13 +25,10 @@ export class ErrorMetricsService {
     const { category, severity, statusCode, endpoint, correlationId: _correlationId } = metrics;
 
     // Log structured error metrics
-    logger.info(
-      {
-        type: 'error_metrics',
-        ...metrics,
-      },
-      'Error metrics recorded',
-    );
+    logger.info('Error metrics recorded', {
+      type: 'error_metrics',
+      ...metrics,
+    });
 
     // Track error counts by category
     const categoryKey = `${category}:${statusCode}`;
@@ -61,7 +58,7 @@ export class ErrorMetricsService {
   } {
     const totalErrors = Array.from(this.errorCounts.values()).reduce(
       (sum, count) => sum + count,
-      0,
+      0
     );
     const errorsByCategory: Record<string, number> = {};
 
@@ -76,7 +73,7 @@ export class ErrorMetricsService {
     const highSeverityErrors = Object.entries(errorsByCategory)
       .filter(
         ([key]) =>
-          key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE),
+          key.includes(ErrorCategory.EXTERNAL_SERVICE) || key.includes(ErrorCategory.DATABASE)
       )
       .reduce((sum, [, count]) => sum + count, 0);
 
@@ -141,20 +138,17 @@ export class ErrorMetricsService {
     // Custom webhook example:
     // this.sendWebhook('/monitoring/errors', metrics);
 
-    logger.debug({ metrics }, 'Error metrics would be sent to external monitoring');
+    logger.debug('Error metrics would be sent to external monitoring', { metrics });
   }
 
   private triggerCriticalAlert(metrics: ErrorMetrics): void {
     // Integration points for alerting systems
     // Examples: PagerDuty, Slack, email, etc.
 
-    logger.error(
-      {
-        type: 'critical_alert',
-        ...metrics,
-      },
-      'CRITICAL ERROR ALERT triggered',
-    );
+    logger.error('CRITICAL ERROR ALERT triggered', {
+      type: 'critical_alert',
+      ...metrics,
+    });
 
     // In production, this would trigger actual alerts:
     // - PagerDuty incident

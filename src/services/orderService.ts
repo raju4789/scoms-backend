@@ -29,7 +29,7 @@ import { Order as OrderEntity } from '../models/Order';
  * and ensures shipping cost does not exceed 15% of the discounted total.
  */
 export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationResult> => {
-  logger.info({ event: 'verifyOrder', input }, 'Verifying order');
+  logger.info('Verifying order', { event: 'verifyOrder', input });
 
   try {
     // Step 1: Validate input
@@ -42,7 +42,7 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
     const warehouses = await warehouseRepository.getWarehouses();
     if (warehouses.length === 0) {
       const reason = 'No warehouses available to fulfill the order';
-      logger.warn({ event: 'verifyOrder', input, reason }, 'No warehouses available');
+      logger.warn('No warehouses available', { event: 'verifyOrder', input, reason });
       return { ...INVALID_ORDER_BASE, reason };
     }
 
@@ -51,7 +51,7 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
       input.quantity,
       input.shipping_latitude,
       input.shipping_longitude,
-      warehouses,
+      warehouses
     );
 
     if (!allocation.isStockSufficient) {
@@ -62,23 +62,26 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
     const pricing = calculatePricing(input.quantity);
     const shippingCost = Math.round(allocation.totalShippingCost * 100) / 100;
 
-    logger.info({ event: 'verifyOrder', ...pricing, shippingCost }, 'Order pricing calculated');
+    logger.info('Order pricing calculated', { event: 'verifyOrder', ...pricing, shippingCost });
 
     // Step 5: Validate shipping cost threshold
     const shippingError = validateShippingCost(shippingCost, pricing.totalPrice);
     if (shippingError) {
-      logger.warn(
-        { event: 'verifyOrder', input, shippingCost, totalPrice: pricing.totalPrice },
-        shippingError,
-      );
+      logger.warn(shippingError, {
+        event: 'verifyOrder',
+        input,
+        shippingCost,
+        totalPrice: pricing.totalPrice,
+      });
       return { ...INVALID_ORDER_BASE, reason: shippingError };
     }
 
     // Step 6: Return successful verification
-    logger.info(
-      { event: 'verifyOrder', ...pricing, shippingCost },
-      'Order verification successful',
-    );
+    logger.info('Order verification successful', {
+      event: 'verifyOrder',
+      ...pricing,
+      shippingCost,
+    });
 
     return {
       isValid: true,
@@ -87,10 +90,11 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
       shippingCost,
     };
   } catch (error: unknown) {
-    logger.error(
-      { event: 'verifyOrder', error: error instanceof Error ? error.message : error, input },
-      'Order verification failed with exception',
-    );
+    logger.error('Order verification failed with exception', {
+      event: 'verifyOrder',
+      error: error instanceof Error ? error.message : error,
+      input,
+    });
 
     if (error instanceof ValidationError) {
       return { ...INVALID_ORDER_BASE, reason: extractValidationReason(error) };
@@ -106,7 +110,7 @@ export const verifyOrder = async (input: OrderInput): Promise<OrderVerificationR
 const updateWarehouseStock = async (
   manager: import('typeorm').EntityManager,
   warehouses: Warehouse[],
-  allocationMap: Map<string, number>,
+  allocationMap: Map<string, number>
 ): Promise<void> => {
   for (const warehouse of warehouses) {
     const allocationQuantity = allocationMap.get(warehouse.name) || 0;
@@ -119,10 +123,11 @@ const updateWarehouseStock = async (
       const newStock = warehouse.stock - allocationQuantity;
       await manager.getRepository(Warehouse).update(warehouse.id, { stock: newStock });
 
-      logger.info(
-        { event: 'updateWarehouseStock', warehouse: warehouse.name, newStock },
-        'Warehouse stock updated',
-      );
+      logger.info('Warehouse stock updated', {
+        event: 'updateWarehouseStock',
+        warehouse: warehouse.name,
+        newStock,
+      });
     }
   }
 };
@@ -134,7 +139,7 @@ const createOrderEntity = async (
   manager: import('typeorm').EntityManager,
   input: OrderInput,
   verification: OrderVerificationResult,
-  allocation: Allocation[],
+  allocation: Allocation[]
 ): Promise<OrderEntity> => {
   const orderData: Partial<OrderEntity> = {
     quantity: input.quantity,
@@ -148,7 +153,7 @@ const createOrderEntity = async (
 
   const createdOrder = await manager.getRepository(OrderEntity).save(orderData);
 
-  logger.info({ event: 'createOrderEntity', orderId: createdOrder.id }, 'Order created');
+  logger.info('Order created', { event: 'createOrderEntity', orderId: createdOrder.id });
   recordOrderMetric('created', 'mixed');
 
   return createdOrder;
@@ -161,14 +166,14 @@ const createOrderEntity = async (
  * and persists the order record within a database transaction.
  */
 export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionResult> => {
-  logger.info({ event: 'submitOrder', input }, 'Submitting order for processing');
+  logger.info('Submitting order for processing', { event: 'submitOrder', input });
 
   try {
     // Step 1: Verify order
     const verification = await verifyOrder(input);
     if (!verification.isValid) {
       const reason = verification.reason || 'Order verification failed';
-      logger.warn({ event: 'submitOrder', input, reason }, 'Order verification failed');
+      logger.warn('Order verification failed', { event: 'submitOrder', input, reason });
 
       throw new BusinessLogicError(reason, {
         correlationId: '',
@@ -178,7 +183,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
     }
 
     // Step 2: Execute transaction
-    const result = await runInTransaction(async (manager) => {
+    const result = await runInTransaction(async manager => {
       // Get fresh warehouse data within transaction
       const warehouses = await warehouseRepository.getWarehouses();
       if (warehouses.length === 0) {
@@ -190,7 +195,7 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
         input.quantity,
         input.shipping_latitude,
         input.shipping_longitude,
-        warehouses,
+        warehouses
       );
 
       const allocationMap = buildAllocationMap(allocation);
@@ -210,14 +215,11 @@ export const submitOrder = async (input: OrderInput): Promise<OrderSubmissionRes
       shipping_cost: result.shipping_cost,
     };
   } catch (error) {
-    logger.error(
-      {
-        event: 'submitOrder',
-        error: error instanceof Error ? error.message : String(error),
-        input,
-      },
-      'Order submission failed',
-    );
+    logger.error('Order submission failed', {
+      event: 'submitOrder',
+      error: error instanceof Error ? error.message : String(error),
+      input,
+    });
 
     recordError('order_submission_failed', 'error');
     throw error;

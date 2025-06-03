@@ -92,7 +92,7 @@ export const metricsMiddleware = (req: Request, res: Response, next: NextFunctio
         status_code: res.statusCode.toString(),
         environment,
       },
-      duration,
+      duration
     );
 
     // Decrement active connections

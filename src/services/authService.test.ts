@@ -48,7 +48,7 @@ describe('AuthService', () => {
 
       expect(mockConsulService.setKV).toHaveBeenCalledWith(
         'scoms/auth/config',
-        expect.stringContaining('scoms-frontend-key'),
+        expect.stringContaining('scoms-frontend-key')
       );
     });
   });
@@ -117,6 +117,7 @@ describe('AuthService', () => {
         },
       };
 
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       (mockConsulService as any).consul = mockConsulClient;
       await authService.initialize();
     });

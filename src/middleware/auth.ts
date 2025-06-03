@@ -35,7 +35,7 @@ function extractApiKey(req: Request): string | null {
 export const authMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const path = req.path;
@@ -100,7 +100,7 @@ export const authMiddleware = async (
 export const optionalAuthMiddleware = async (
   req: AuthenticatedRequest,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): Promise<void> => {
   try {
     const apiKey = extractApiKey(req);

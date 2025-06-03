@@ -3,7 +3,7 @@ global:
   evaluation_interval: 15s
   external_labels:
     cluster: 'scoms-local'
-    environment: 'production'
+    environment: 'development'
 
 rule_files:
   - 'alerts.yml'
@@ -19,27 +19,21 @@ scrape_configs:
     static_configs:
       - targets: ['localhost:9090']
     scrape_interval: 30s
+    metrics_path: /metrics
 
-  # SCOMS Application (for development - running locally)
-  - job_name: 'scoms-app-dev'
+  # SCOMS Application running locally
+  - job_name: 'scoms-app-local'
     static_configs:
       - targets: ['host.docker.internal:3000']
-        labels:
-          environment: 'development'
-    scrape_interval: 30s
-    metrics_path: '/metrics'
-
-  # SCOMS Application
-  - job_name: 'scoms-app'
-    static_configs:
-      - targets: ['scoms-app:3000']
     scrape_interval: 15s
     metrics_path: /metrics
     scrape_timeout: 10s
     honor_labels: true
+    params:
+      environment: ['development']
 
-  # Docker containers metrics via cAdvisor (if needed later)
-  - job_name: 'docker'
+  # Development Database Metrics (if postgres_exporter is added later)
+  - job_name: 'postgres-dev'
     static_configs:
       - targets: []
     scrape_interval: 30s

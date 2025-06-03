@@ -91,7 +91,7 @@ class AuthService {
     try {
       await consulService.setKV(
         `${this.CONSUL_AUTH_KEY}/config`,
-        JSON.stringify(defaultConfig, null, 2),
+        JSON.stringify(defaultConfig, null, 2)
       );
       this.authConfig = defaultConfig;
       this.configCacheTime = Date.now();
@@ -115,6 +115,7 @@ class AuthService {
 
     // Reload from Consul
     await this.loadAuthConfig();
+    // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
     return this.authConfig!;
   }
 
@@ -190,7 +191,7 @@ class AuthService {
   async shouldBypassAuth(path: string): Promise<boolean> {
     try {
       const config = await this.getAuthConfig();
-      return config.bypassRoutes.some((route) => path.startsWith(route));
+      return config.bypassRoutes.some(route => path.startsWith(route));
     } catch (error) {
       logger.error('Error checking bypass routes:', error);
       return false;
@@ -238,7 +239,7 @@ class AuthService {
 
         await consulService.setKV(
           `${this.CONSUL_AUTH_KEY}/config`,
-          JSON.stringify(config, null, 2),
+          JSON.stringify(config, null, 2)
         );
 
         this.authConfig = config;

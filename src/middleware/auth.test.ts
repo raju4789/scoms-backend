@@ -40,6 +40,7 @@ describe('Authentication Middleware', () => {
         path: '/health',
         originalUrl: '/health',
         url: '/health',
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
       } as any;
       mockAuthService.shouldBypassAuth.mockResolvedValue(true);
 
@@ -58,12 +59,13 @@ describe('Authentication Middleware', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Authentication required',
-        }),
+        })
       );
       expect(next).not.toHaveBeenCalled();
     });
 
     it('should validate API key from Authorization header', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       req.headers!.authorization = 'Bearer valid-api-key';
       mockAuthService.shouldBypassAuth.mockResolvedValue(false);
       mockAuthService.validateApiKey.mockResolvedValue({
@@ -84,6 +86,7 @@ describe('Authentication Middleware', () => {
     });
 
     it('should validate API key from x-api-key header', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       req.headers!['x-api-key'] = 'valid-api-key';
       mockAuthService.shouldBypassAuth.mockResolvedValue(false);
       mockAuthService.validateApiKey.mockResolvedValue({
@@ -103,6 +106,7 @@ describe('Authentication Middleware', () => {
     });
 
     it('should reject invalid API key', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       req.headers!.authorization = 'Bearer invalid-key';
       mockAuthService.shouldBypassAuth.mockResolvedValue(false);
       mockAuthService.validateApiKey.mockResolvedValue({
@@ -117,7 +121,7 @@ describe('Authentication Middleware', () => {
         expect.objectContaining({
           error: 'Authentication failed',
           message: 'Invalid API key',
-        }),
+        })
       );
       expect(next).not.toHaveBeenCalled();
     });
@@ -132,6 +136,7 @@ describe('Authentication Middleware', () => {
     });
 
     it('should validate API key when provided', async () => {
+      // eslint-disable-next-line @typescript-eslint/no-non-null-assertion
       req.headers!.authorization = 'Bearer valid-key';
       mockAuthService.validateApiKey.mockResolvedValue({
         isValid: true,
@@ -194,7 +199,7 @@ describe('Authentication Middleware', () => {
       expect(res.json).toHaveBeenCalledWith(
         expect.objectContaining({
           error: 'Permission denied',
-        }),
+        })
       );
       expect(next).not.toHaveBeenCalled();
     });

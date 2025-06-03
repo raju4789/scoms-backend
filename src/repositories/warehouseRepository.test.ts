@@ -50,7 +50,7 @@ describe('warehouseRepository (unit, with mocks)', () => {
     }));
     mockRepo.save.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.createWarehouse({} as Partial<Warehouse>)).rejects.toThrow(
-      DatabaseError,
+      DatabaseError
     );
   });
 
@@ -66,7 +66,7 @@ describe('warehouseRepository (unit, with mocks)', () => {
 
   it('should get warehouse by id if exists', async () => {
     mockRepo.findOneBy.mockImplementation(async (where: Partial<Warehouse>) =>
-      where.id === 1 ? validWarehouse : null,
+      where.id === 1 ? validWarehouse : null
     );
     await expect(warehouseRepository.getWarehouseById(1)).resolves.toEqual(validWarehouse);
   });
@@ -80,14 +80,14 @@ describe('warehouseRepository (unit, with mocks)', () => {
     mockRepo.update.mockResolvedValue(undefined);
     mockRepo.findOneBy.mockResolvedValue(validWarehouse);
     await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).resolves.toEqual(
-      validWarehouse,
+      validWarehouse
     );
   });
 
   it('should throw DatabaseError when updateWarehouse throws', async () => {
     mockRepo.update.mockRejectedValue(new Error('fail'));
     await expect(warehouseRepository.updateWarehouse(1, { stock: 200 })).rejects.toThrow(
-      DatabaseError,
+      DatabaseError
     );
   });
 

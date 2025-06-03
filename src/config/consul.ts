@@ -213,7 +213,7 @@ class ConsulService {
           const currentEnv = process.env.NODE_ENV || 'development';
           if (config.metadata.environment !== currentEnv) {
             logger.warn(
-              `Environment mismatch: config is for '${config.metadata.environment}' but current environment is '${currentEnv}'`,
+              `Environment mismatch: config is for '${config.metadata.environment}' but current environment is '${currentEnv}'`
             );
             // We still allow this, but warn about it
           }
@@ -319,7 +319,7 @@ class ConsulService {
         deviceWeightKg: parseFloat(process.env.DEVICE_WEIGHT_KG || '0.365'),
         shippingRatePerKgKm: parseFloat(process.env.SHIPPING_RATE_PER_KG_KM || '0.01'),
         shippingCostThresholdPercent: parseFloat(
-          process.env.SHIPPING_COST_THRESHOLD_PERCENT || '0.15',
+          process.env.SHIPPING_COST_THRESHOLD_PERCENT || '0.15'
         ),
         discountTiers: [
           { minQuantity: 250, discount: 0.2 },
@@ -437,7 +437,7 @@ class ConsulService {
     if (this.reconnectAttempts < this.maxReconnectAttempts) {
       this.reconnectAttempts++;
       logger.info(
-        `Attempting to reconnect to Consul (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`,
+        `Attempting to reconnect to Consul (attempt ${this.reconnectAttempts}/${this.maxReconnectAttempts})`
       );
 
       setTimeout(async () => {
@@ -580,12 +580,13 @@ class ConsulService {
    * Deep merge utility for configuration objects
    * This allows partial updates while preserving other values
    */
+  // eslint-disable-next-line @typescript-eslint/no-explicit-any
   private deepMerge(target: any, source: any): any {
     if (!source) return target;
 
-    Object.keys(source).forEach((key) => {
+    Object.keys(source).forEach(key => {
       if (source[key] && typeof source[key] === 'object' && !Array.isArray(source[key])) {
-        if (!target[key]) target[key] = {};
+        target[key] ??= {};
         this.deepMerge(target[key], source[key]);
       } else {
         target[key] = source[key];
@@ -625,6 +626,7 @@ class ConsulService {
       // Stop all watchers
       for (const [key, watcher] of this.configWatchers.entries()) {
         // Fix for watcher.end():
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         (watcher as any).end();
         logger.info('Configuration watcher stopped', { key });
       }

@@ -24,6 +24,6 @@ export async function seedInitialWarehousesIfEmpty() {
       logger.info('Warehouses already exist, skipping seed.');
     }
   } catch (e) {
-    logger.error({ error: e }, 'Error during warehouse seeding');
+    logger.error('Error during warehouse seeding', { error: e });
   }
 }

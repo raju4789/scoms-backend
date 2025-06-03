@@ -393,7 +393,7 @@ describe('Validation Middleware', () => {
       const nonDataMethods = ['GET', 'DELETE', 'HEAD', 'OPTIONS'];
       const dataMethods = ['POST', 'PUT', 'PATCH'];
 
-      nonDataMethods.forEach((method) => {
+      nonDataMethods.forEach(method => {
         it(`should not require content-type for ${method} requests`, () => {
           // Arrange
           req.method = method;
@@ -408,7 +408,7 @@ describe('Validation Middleware', () => {
         });
       });
 
-      dataMethods.forEach((method) => {
+      dataMethods.forEach(method => {
         it(`should require JSON content-type for ${method} requests`, () => {
           // Arrange
           req.method = method;
@@ -734,6 +734,7 @@ describe('Validation Middleware', () => {
 
       it('should handle circular references gracefully', () => {
         // Arrange
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
         const circular: any = { name: 'test' };
         circular.self = circular;
         // Don't add __proto__ as it's deprecated and causes linting issues
@@ -752,7 +753,6 @@ describe('Validation Middleware', () => {
 
     describe('No Body or Query', () => {
       it('should handle requests with no body or query', () => {
-        
         // Arrange
         delete req.body;
         delete req.query;

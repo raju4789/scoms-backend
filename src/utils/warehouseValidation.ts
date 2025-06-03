@@ -15,7 +15,7 @@ export function validateCreateWarehouseInput(data: unknown): void {
   const input = data as CreateWarehouseInput;
   // Only allow expected fields
   const allowedFields = ['name', 'latitude', 'longitude', 'stock'];
-  const extraFields = Object.keys(input).filter((key) => !allowedFields.includes(key));
+  const extraFields = Object.keys(input).filter(key => !allowedFields.includes(key));
   if (extraFields.length > 0) {
     throw new ValidationError(`Unknown field(s) in request: ${extraFields.join(', ')}`);
   }
@@ -35,7 +35,7 @@ export function validateUpdateWarehouseInput(data: unknown): void {
   const input = data as UpdateWarehouseInput;
   // Only allow expected fields
   const allowedFields = ['name', 'latitude', 'longitude', 'stock'];
-  const extraFields = Object.keys(input).filter((key) => !allowedFields.includes(key));
+  const extraFields = Object.keys(input).filter(key => !allowedFields.includes(key));
   if (extraFields.length > 0) {
     throw new ValidationError(`Unknown field(s) in request: ${extraFields.join(', ')}`);
   }

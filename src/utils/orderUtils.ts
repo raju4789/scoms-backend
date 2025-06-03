@@ -100,9 +100,9 @@ export const haversineDistanceKm = (
   latitude1: number,
   longitude1: number,
   latitude2: number,
-  longitude2: number,
+  longitude2: number
 ): number => {
-  const toRadians: (degrees: number) => number = (degrees) => degrees * DEG_TO_RAD;
+  const toRadians: (degrees: number) => number = degrees => degrees * DEG_TO_RAD;
   const deltaLat: number = toRadians(latitude2 - latitude1);
   const deltaLon: number = toRadians(longitude2 - longitude1);
   const haversineFormulaComponent: number =
@@ -141,16 +141,16 @@ export const calculateShippingCost = (quantity: number, distanceKm: number): num
 export const sortWarehousesByProximity = (
   warehouses: Warehouse[],
   shippingLatitude: number,
-  shippingLongitude: number,
+  shippingLongitude: number
 ): WarehouseWithDistance[] => {
   return warehouses
-    .map((warehouse) => ({
+    .map(warehouse => ({
       ...warehouse,
       distanceKm: haversineDistanceKm(
         warehouse.latitude,
         warehouse.longitude,
         shippingLatitude,
-        shippingLongitude,
+        shippingLongitude
       ),
     }))
     .sort((warehouse1, warehouse2) => warehouse1.distanceKm - warehouse2.distanceKm);
@@ -163,10 +163,10 @@ export const allocateOrderAcrossWarehouses = (
   quantity: number,
   shippingLatitude: number,
   shippingLongitude: number,
-  warehouses: Warehouse[],
+  warehouses: Warehouse[]
 ): AllocationAndShipping => {
   logger.info(
-    `[allocateOrderAcrossWarehouses] input: quantity=${quantity}, shippingLatitude=${shippingLatitude}, shippingLongitude=${shippingLongitude}, warehouses=${JSON.stringify(warehouses)}`,
+    `[allocateOrderAcrossWarehouses] input: quantity=${quantity}, shippingLatitude=${shippingLatitude}, shippingLongitude=${shippingLongitude}, warehouses=${JSON.stringify(warehouses)}`
   );
   const totalStock = warehouses.reduce((sum, warehouse) => sum + warehouse.stock, 0);
 
@@ -181,11 +181,11 @@ export const allocateOrderAcrossWarehouses = (
   const sortedWarehouses = sortWarehousesByProximity(
     warehouses,
     shippingLatitude,
-    shippingLongitude,
+    shippingLongitude
   );
 
   logger.info(
-    `[allocateOrderAcrossWarehouses] sortedWarehouses: ${JSON.stringify(sortedWarehouses)}`,
+    `[allocateOrderAcrossWarehouses] sortedWarehouses: ${JSON.stringify(sortedWarehouses)}`
   );
 
   for (const warehouse of sortedWarehouses) {
@@ -194,7 +194,7 @@ export const allocateOrderAcrossWarehouses = (
 
     const allocatedQuantity = Math.min(warehouse.stock, remainingQuantity);
     logger.info(
-      `[allocateOrderAcrossWarehouses] allocating: warehouse=${warehouse.name}, allocatedQuantity=${allocatedQuantity}, distanceKm=${warehouse.distanceKm}`,
+      `[allocateOrderAcrossWarehouses] allocating: warehouse=${warehouse.name}, allocatedQuantity=${allocatedQuantity}, distanceKm=${warehouse.distanceKm}`
     );
     allocation.push({ warehouse: warehouse.name, quantity: allocatedQuantity });
 
@@ -203,7 +203,7 @@ export const allocateOrderAcrossWarehouses = (
   }
 
   logger.info(
-    `[allocateOrderAcrossWarehouses] result: allocation=${JSON.stringify(allocation)}, totalShippingCost=${totalShippingCost}, isStockSufficient=${totalStock >= quantity}, remainingQuantity=${remainingQuantity}`,
+    `[allocateOrderAcrossWarehouses] result: allocation=${JSON.stringify(allocation)}, totalShippingCost=${totalShippingCost}, isStockSufficient=${totalStock >= quantity}, remainingQuantity=${remainingQuantity}`
   );
 
   return { allocation, totalShippingCost, isStockSufficient: true };
@@ -213,7 +213,7 @@ export const allocateOrderAcrossWarehouses = (
  * Convert allocation array to map for efficient lookups
  */
 export const buildAllocationMap = (allocations: Allocation[]): Map<string, number> => {
-  return new Map(allocations.map((allocation) => [allocation.warehouse, allocation.quantity]));
+  return new Map(allocations.map(allocation => [allocation.warehouse, allocation.quantity]));
 };
 
 /**
@@ -249,7 +249,7 @@ export const validateOrderInputSafe = (input: OrderInput): string | null => {
  */
 export const validateShippingCost = (shippingCost: number, totalPrice: number): string | null => {
   logger.info(
-    `[validateShippingCost] totalPrice=${totalPrice}, shippingCost=${shippingCost}, threshold=${getShippingCostThreshold() * totalPrice}`,
+    `[validateShippingCost] totalPrice=${totalPrice}, shippingCost=${shippingCost}, threshold=${getShippingCostThreshold() * totalPrice}`
   );
   if (totalPrice > 0 && shippingCost > getShippingCostThreshold() * totalPrice) {
     logger.info('[validateShippingCost] Shipping cost exceeds threshold!');
@@ -263,7 +263,7 @@ export const validateShippingCost = (shippingCost: number, totalPrice: number): 
  * Abstracts transaction management out of the service layer.
  */
 export async function runInTransaction<T>(
-  fn: (manager: import('typeorm').EntityManager) => Promise<T>,
+  fn: (manager: import('typeorm').EntityManager) => Promise<T>
 ): Promise<T> {
   return getDataSource().transaction(fn);
 }

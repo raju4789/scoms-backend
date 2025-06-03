@@ -49,7 +49,7 @@ export function validateOrderInput(data: unknown): OrderInput {
 
   // Check for unexpected fields (optional security measure)
   const allowedFields = ['quantity', 'shipping_latitude', 'shipping_longitude'];
-  const unexpectedFields = Object.keys(data).filter((key) => !allowedFields.includes(key));
+  const unexpectedFields = Object.keys(data).filter(key => !allowedFields.includes(key));
   if (unexpectedFields.length > 0) {
     errors.unexpectedFields = `Unexpected fields: ${unexpectedFields.join(', ')}`;
   }

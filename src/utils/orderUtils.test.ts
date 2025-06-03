@@ -44,13 +44,14 @@ describe('orderUtils', () => {
     it('calls the provided function with a manager and returns its result', async () => {
       // Mock getDataSource().transaction
       const mockManager = { id: 123 };
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
       const mockTransaction = jest.fn(async (fn: (manager: any) => Promise<any>) =>
-        fn(mockManager),
+        fn(mockManager)
       );
       jest.spyOn(DataSourceConsul, 'getDataSource').mockReturnValue({
         transaction: mockTransaction,
       } as unknown as import('typeorm').DataSource);
-      const fn = jest.fn(async (manager) => manager.id);
+      const fn = jest.fn(async manager => manager.id);
       const result = await runInTransaction(fn);
       expect(fn).toHaveBeenCalledWith(mockManager);
       expect(result).toBe(123);

@@ -39,7 +39,7 @@ export async function initializeDataSource(): Promise<DataSource> {
       password: dbConfig.password,
       database: dbConfig.database,
       ssl: dbConfig.ssl,
-      synchronize: false, // Disable - database schema already exists
+      synchronize: process.env.NODE_ENV === 'development', // Enable for development
       logging: process.env.NODE_ENV === 'development' ? ['query', 'error'] : ['error'],
       entities: [Order, Warehouse],
       migrations: [],
@@ -80,7 +80,7 @@ async function initializeFallbackDataSource(): Promise<DataSource> {
       password: process.env.DB_PASSWORD || 'postgres',
       database: process.env.DB_NAME || 'scoms',
       ssl: process.env.DB_SSL === 'true',
-      synchronize: false, // Disable - database schema already exists
+      synchronize: process.env.NODE_ENV === 'development', // Enable for development
       logging: process.env.NODE_ENV === 'development' ? ['query', 'error'] : ['error'],
       entities: [Order, Warehouse],
       migrations: [],

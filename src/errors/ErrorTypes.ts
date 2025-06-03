@@ -98,7 +98,7 @@ export class AppError extends Error {
       retryable?: boolean;
       helpUrl?: string;
       cause?: unknown;
-    } = {},
+    } = {}
   ) {
     super(message);
 

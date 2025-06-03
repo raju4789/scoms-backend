@@ -36,7 +36,7 @@ export function errorHandler(
   err: ExtendedError,
   req: Request,
   res: Response,
-  next: NextFunction,
+  next: NextFunction
 ): void {
   const startTime = Date.now();
   const errorId = uuidv4();
@@ -46,14 +46,14 @@ export function errorHandler(
 
   // Prevent duplicate error handling
   if (res.headersSent) {
-    logger.warn({ errorId, correlationId }, 'Headers already sent, cannot handle error');
+    logger.warn('Headers already sent, cannot handle error', { errorId, correlationId });
     return next(err);
   }
 
   // Check for circuit breaker
   const endpoint = `${req.method} ${req.route?.path || req.path}`;
   if (metricsService.shouldCircuitBreak(endpoint)) {
-    logger.warn({ correlationId, endpoint }, 'Circuit breaker activated for endpoint');
+    logger.warn('Circuit breaker activated for endpoint', { correlationId, endpoint });
     return sendErrorResponse(res, {
       statusCode: StatusCodes.SERVICE_UNAVAILABLE,
       category: ErrorCategory.SYSTEM,
@@ -159,13 +159,13 @@ export function errorHandler(
 
   // Log based on severity
   if (errorDetails.severity === ErrorSeverity.CRITICAL) {
-    logger.error(logContext, `CRITICAL ERROR: ${err.message}`);
+    logger.error(`CRITICAL ERROR: ${err.message}`, logContext);
   } else if (errorDetails.severity === ErrorSeverity.HIGH) {
-    logger.error(logContext, `High severity error: ${err.message}`);
+    logger.error(`High severity error: ${err.message}`, logContext);
   } else if (errorDetails.severity === ErrorSeverity.MEDIUM) {
-    logger.warn(logContext, `Medium severity error: ${err.message}`);
+    logger.warn(`Medium severity error: ${err.message}`, logContext);
   } else {
-    logger.info(logContext, `Low severity error: ${err.message}`);
+    logger.info(`Low severity error: ${err.message}`, logContext);
   }
 
   // Record error metrics
@@ -207,7 +207,7 @@ function sendErrorResponse(
     retryable?: boolean;
     helpUrl?: string;
     details?: Record<string, unknown>;
-  },
+  }
 ): void {
   const isProduction = process.env.NODE_ENV === 'production';
 
@@ -235,7 +235,7 @@ function sendErrorResponse(
  * Middleware to handle async route errors
  */
 export function asyncHandler(
-  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>,
+  fn: (req: Request, res: Response, next: NextFunction) => Promise<void>
 ) {
   return (req: Request, res: Response, next: NextFunction) => {
     Promise.resolve(fn(req, res, next)).catch(next);
@@ -247,14 +247,11 @@ export function asyncHandler(
  */
 export function setupGlobalErrorHandlers(): void {
   process.on('unhandledRejection', (reason, promise) => {
-    logger.error(
-      {
-        type: 'unhandled_rejection',
-        reason,
-        promise,
-      },
-      'Unhandled Promise Rejection',
-    );
+    logger.error('Unhandled Promise Rejection', {
+      type: 'unhandled_rejection',
+      reason,
+      promise,
+    });
 
     // Graceful shutdown in production
     if (process.env.NODE_ENV === 'production') {
@@ -262,15 +259,12 @@ export function setupGlobalErrorHandlers(): void {
     }
   });
 
-  process.on('uncaughtException', (error) => {
-    logger.error(
-      {
-        type: 'uncaught_exception',
-        error,
-        stack: error.stack,
-      },
-      'Uncaught Exception',
-    );
+  process.on('uncaughtException', error => {
+    logger.error('Uncaught Exception', {
+      type: 'uncaught_exception',
+      error,
+      stack: error.stack,
+    });
 
     // Graceful shutdown
     process.exit(1);

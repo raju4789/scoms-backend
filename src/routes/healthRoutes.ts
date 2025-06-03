@@ -59,7 +59,7 @@ router.get(
     };
 
     res.status(StatusCodes.OK).json(successResponse(health));
-  }),
+  })
 );
 
 /**
@@ -249,7 +249,7 @@ router.get(
     const statusCode =
       overallStatus === 'healthy' ? StatusCodes.OK : StatusCodes.SERVICE_UNAVAILABLE;
     res.status(statusCode).json(successResponse(health));
-  }),
+  })
 );
 
 /**
@@ -334,7 +334,7 @@ router.get(
         reason: 'Database not available',
       });
     }
-  }),
+  })
 );
 
 /**

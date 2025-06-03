@@ -166,7 +166,7 @@ describe('orderService.submitOrder', () => {
         async (cb: (manager: import('typeorm').EntityManager) => Promise<unknown>) =>
           cb({
             getRepository: () => ({ update: jest.fn(), save: jest.fn() }),
-          } as unknown as import('typeorm').EntityManager),
+          } as unknown as import('typeorm').EntityManager)
       );
   });
 
@@ -179,7 +179,7 @@ describe('orderService.submitOrder', () => {
       reason: 'Invalid',
     });
     await expect(
-      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }),
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
     ).rejects.toThrow(BusinessLogicError);
   });
 
@@ -192,7 +192,7 @@ describe('orderService.submitOrder', () => {
     });
     (warehouseRepository.getWarehouses as jest.Mock).mockResolvedValue([]);
     await expect(
-      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }),
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
     ).rejects.toThrow(BusinessLogicError);
   });
 
@@ -210,7 +210,7 @@ describe('orderService.submitOrder', () => {
       { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1 },
     ]);
     await expect(
-      orderService.submitOrder({ quantity: 5, shipping_latitude: 10, shipping_longitude: 20 }),
+      orderService.submitOrder({ quantity: 5, shipping_latitude: 10, shipping_longitude: 20 })
     ).rejects.toThrow(AppError);
   });
 
@@ -229,7 +229,7 @@ describe('orderService.submitOrder', () => {
       { id: 'w2', name: 'WH2', latitude: 15, longitude: 25, stock: 0 },
     ]);
     await expect(
-      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }),
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
     ).rejects.toThrow(AppError);
   });
 
@@ -247,7 +247,7 @@ describe('orderService.submitOrder', () => {
       { id: 'w1', name: 'WH1', latitude: 10, longitude: 20, stock: 1 },
     ]);
     await expect(
-      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 }),
+      orderService.submitOrder({ quantity: 1, shipping_latitude: 10, shipping_longitude: 20 })
     ).rejects.toThrow(AppError);
   });
 });

@@ -13,18 +13,15 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
   const startTime = Date.now();
 
   // Log incoming request
-  logger.info(
-    {
-      type: 'http_request_start',
-      method: req.method,
-      url: req.originalUrl,
-      correlationId: req.correlationId,
-      userAgent: req.get('user-agent'),
-      ip: req.ip || req.connection?.remoteAddress,
-      contentType: req.get('content-type'),
-    },
-    `${req.method} ${req.originalUrl} - Request started`,
-  );
+  logger.info(`${req.method} ${req.originalUrl} - Request started`, {
+    type: 'http_request_start',
+    method: req.method,
+    url: req.originalUrl,
+    correlationId: req.correlationId,
+    userAgent: req.get('user-agent'),
+    ip: req.ip || req.connection?.remoteAddress,
+    contentType: req.get('content-type'),
+  });
 
   // Override res.end to log response
   const originalEnd = res.end;
@@ -46,16 +43,16 @@ export function requestLogger(req: Request, res: Response, next: NextFunction): 
     // Log at appropriate level based on status code
     if (res.statusCode >= 500) {
       // Server errors (5xx) - error level
-      logger.error(logData, logMessage);
+      logger.error(logMessage, logData);
     } else if (res.statusCode >= 400) {
       // Client errors (4xx) including 404 - error level
-      logger.error(logData, logMessage);
+      logger.error(logMessage, logData);
     } else if (res.statusCode >= 300) {
       // Redirects (3xx) - info level
-      logger.info(logData, logMessage);
+      logger.info(logMessage, logData);
     } else {
       // Success (2xx) - info level
-      logger.info(logData, logMessage);
+      logger.info(logMessage, logData);
     }
 
     // Call original end method

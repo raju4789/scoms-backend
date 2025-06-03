@@ -51,7 +51,7 @@ describe('orderRepository (unit, with mocks)', () => {
 
   it('should get order by id if exists', async () => {
     mockRepo.findOneBy.mockImplementation(async (where: Partial<Order>) =>
-      where.id === 'exists' ? validOrder : null,
+      where.id === 'exists' ? validOrder : null
     );
     await expect(orderRepository.getOrderById('exists')).resolves.toEqual(validOrder);
   });

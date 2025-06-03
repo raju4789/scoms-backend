@@ -8,20 +8,17 @@ import logger from '../utils/logger';
  */
 export function validateRequest<T>(
   validationFn: (data: unknown) => T,
-  source: 'body' | 'params' | 'query' = 'body',
+  source: 'body' | 'params' | 'query' = 'body'
 ) {
   return (req: Request, res: Response, next: NextFunction): void => {
     try {
       const dataToValidate = req[source];
 
-      logger.debug(
-        {
-          correlationId: req.correlationId,
-          source,
-          data: dataToValidate,
-        },
-        'Validating request data',
-      );
+      logger.debug('Validating request data', {
+        correlationId: req.correlationId,
+        source,
+        data: dataToValidate,
+      });
 
       // Perform validation
       const validatedData = validationFn(dataToValidate as unknown);
@@ -29,25 +26,19 @@ export function validateRequest<T>(
       // Store validated data back to request object
       req[source] = validatedData;
 
-      logger.debug(
-        {
-          correlationId: req.correlationId,
-          source,
-        },
-        'Request validation successful',
-      );
+      logger.debug('Request validation successful', {
+        correlationId: req.correlationId,
+        source,
+      });
 
       next();
     } catch (error) {
-      logger.warn(
-        {
-          correlationId: req.correlationId,
-          source,
-          error: error instanceof Error ? error.message : 'Unknown validation error',
-          data: req[source],
-        },
-        'Request validation failed',
-      );
+      logger.warn('Request validation failed', {
+        correlationId: req.correlationId,
+        source,
+        error: error instanceof Error ? error.message : 'Unknown validation error',
+        data: req[source],
+      });
 
       // If it's already a ValidationError, pass it through
       if (error instanceof ValidationError) {
@@ -57,8 +48,8 @@ export function validateRequest<T>(
         next(
           new ValidationError(
             error instanceof Error ? error.message : 'Request validation failed',
-            { source, originalError: error },
-          ),
+            { source, originalError: error }
+          )
         );
       }
     }
@@ -74,15 +65,15 @@ export function validateRequestFormat(req: Request, res: Response, next: NextFun
     const contentType = req.get('content-type');
 
     if (!contentType) {
-      logger.warn(
-        { correlationId: req.correlationId, method: req.method },
-        'Missing content-type header',
-      );
+      logger.warn('Missing content-type header', {
+        correlationId: req.correlationId,
+        method: req.method,
+      });
       return next(new ValidationError('Content-Type header is required'));
     }
 
     if (!contentType.toLowerCase().includes('application/json')) {
-      logger.warn({ correlationId: req.correlationId, contentType }, 'Invalid content type');
+      logger.warn('Invalid content type', { correlationId: req.correlationId, contentType });
       return next(new ValidationError('Content-Type must be application/json'));
     }
   }
@@ -109,7 +100,7 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
     seen.add(obj as object);
 
     if (Array.isArray(obj)) {
-      return obj.map((item) => sanitizeObject(item, seen));
+      return obj.map(item => sanitizeObject(item, seen));
     }
 
     // Handle Date objects specifically
