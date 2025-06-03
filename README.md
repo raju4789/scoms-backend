@@ -96,7 +96,7 @@ curl -H "Authorization: Bearer scoms-frontend-key" \
        "deviceQuantity": 25,
        "customerLocation": {"latitude": 37.7749, "longitude": -122.4194}
      }' \
-     http://localhost:3000/api/v1/orders
+     http://localhost:3000/api/v1/orders/submit
 
 # List available warehouses
 curl -H "Authorization: Bearer scoms-frontend-key" \
@@ -157,7 +157,7 @@ SCOMS follows clean architecture principles with clear separation of concerns:
 - **TypeORM** - Object-relational mapping with decorators
 
 **Configuration & Service Discovery:**
-- **Consul** - Dynamic configuration management and service discovery
+- **Consul** - Dynamic configuration management
 - **🔥 Hot Configuration Reload** - Real-time configuration updates without server restarts
   - Configuration changes apply instantly across all service instances
   - Zero-downtime updates for pricing rules, discount rates, and business logic
@@ -208,49 +208,8 @@ Authorization: Bearer scoms-frontend-key
 | `GET` | `/health` | Service health check | ❌ |
 | `GET` | `/api/v1/warehouses` | List all warehouses | ✅ |
 | `POST` | `/api/v1/orders/verify` | Verify order pricing | ✅ |
-| `POST` | `/api/v1/orders` | Create new order | ✅ |
+| `POST` | `/api/v1/orders/submit` | Create new order | ✅ |
 | `GET` | `/api/v1/orders/:id` | Get order details | ✅ |
-
-### Request/Response Examples
-
-**Order Verification:**
-```json
-POST /api/v1/orders/verify
-{
-  "deviceQuantity": 50,
-  "customerLocation": {
-    "latitude": 40.7128,
-    "longitude": -74.0060
-  }
-}
-
-Response:
-{
-  "deviceQuantity": 50,
-  "unitPrice": 150.00,
-  "discount": 10.0,
-  "subtotal": 6750.00,
-  "shippingCost": 125.50,
-  "totalPrice": 6875.50,
-  "selectedWarehouse": {
-    "id": "wh-001",
-    "name": "New York Warehouse",
-    "distance": 15.3
-  }
-}
-```
-
-**Error Response Format:**
-```json
-{
-  "error": {
-    "code": "VALIDATION_ERROR",
-    "message": "Invalid device quantity",
-    "details": ["Device quantity must be between 1 and 1000"]
-  },
-  "correlationId": "req-12345"
-}
-```
 
 ## 💰 Business Logic
 
@@ -258,7 +217,7 @@ Response:
 
 Base device price: **$150** (configurable via Consul)
 
-**Volume Discount Tiers:**
+**Volume Discount Tiers:** (configurable via Consul)
 - 1-24 devices: **0%** discount
 - 25-49 devices: **5%** discount
 - 50-99 devices: **10%** discount
@@ -275,8 +234,8 @@ Base device price: **$150** (configurable via Consul)
 ### Shipping Cost Calculation
 
 - **Rate**: $0.01 per kg per km (configurable)
-- **Device Weight**: 0.365kg per device
-- **Cap**: Maximum 15% of order subtotal
+- **Device Weight**: 0.365kg per device (configurable via Consul)
+- **Cap**: Maximum 15% of order subtotal (configurable via Consul)
 - **Distance**: Great-circle distance between customer and warehouse
 
 ## 🧪 Testing Strategy
@@ -284,23 +243,16 @@ Base device price: **$150** (configurable via Consul)
 ### Test Coverage
 
 - **Unit Tests**: Service layer and utility functions
-- **Integration Tests**: API endpoints and database operations
-- **Repository Tests**: Data access layer validation
 
 ### Running Tests
 
 ```bash
 # Run all tests
-npm test
+npm run test
 
 # Run tests with coverage
 npm run test:coverage
 
-# Run tests in watch mode
-npm run test:watch
-
-# Run specific test file
-npm test -- orderService.test.ts
 ```
 
 ### Test Environment
@@ -308,32 +260,6 @@ npm test -- orderService.test.ts
 Tests run against an in-memory SQLite database for fast execution and isolation.
 
 ## 🐳 Docker Configuration
-
-### Development Environment
-
-```bash
-# Start development services
-npm run docker:dev
-
-# Services included:
-# - PostgreSQL database
-# - Consul configuration server
-# - Prometheus metrics collection
-# - Grafana dashboards
-```
-
-### Production Environment
-
-```bash
-# Start production environment
-npm run docker:prod
-
-# Additional production features:
-# - Application container
-# - Health checks
-# - Resource limits
-# - Restart policies
-```
 
 ### Docker Commands
 
@@ -353,7 +279,7 @@ docker-compose down
 
 ## 📈 Monitoring & Observability
 
-### Metrics Collection
+### Metrics Collection(in progress)
 
 - **Application Metrics**: Request count, response time, error rates
 - **Business Metrics**: Order volume, revenue, warehouse utilization
@@ -367,58 +293,6 @@ Access Grafana at http://localhost:3001 (admin/admin)
 - **Application Overview**: Request metrics, error rates, response times
 - **Business Intelligence**: Order trends, revenue analytics
 - **System Health**: Resource utilization, database performance
-
-### Logging
-
-Structured JSON logs with correlation IDs for request tracing:
-
-```json
-{
-  "timestamp": "2025-06-03T10:30:00.000Z",
-  "level": "info",
-  "message": "Order created successfully",
-  "correlationId": "req-12345",
-  "orderId": "ord-67890",
-  "customerId": "cust-456",
-  "totalPrice": 6875.50
-}
-```
-
-## 🔧 Development Guide
-
-### Local Development
-
-```bash
-# Install dependencies
-npm ci
-
-# Start development server with hot reload
-npm run dev:watch
-
-# Run linting
-npm run lint
-
-# Fix linting issues
-npm run lint:fix
-
-# Build for production
-npm run build
-```
-
-### Environment Variables
-
-Key configuration via Consul, but some local overrides available:
-
-```bash
-# Database connection (optional override)
-DATABASE_URL=postgresql://user:pass@localhost:5432/scoms_dev
-
-# Log level (optional)
-LOG_LEVEL=debug
-
-# Port (optional)
-PORT=3000
-```
 
 ## Project Structure
 
@@ -496,5 +370,15 @@ For detailed API documentation, visit the interactive Swagger UI at `/api-docs` 
 - **Redis Integration**: Redis-based caching for high-frequency API endpoints
 - **Cache Strategies**: Cache invalidation strategies for maintaining data consistency
 - **Performance Optimization**: Response time optimization for frequently accessed data and warehouse lookups
+
+### 🚀 CI/CD Pipeline & Cloud Deployment
+- **GitHub Actions**: Automated CI/CD pipeline with GitHub Actions for build, test, and deployment
+- **Container Registry**: Docker image publishing to AWS ECR or Azure Container Registry
+- **Infrastructure as Code**: Terraform or AWS CDK for infrastructure provisioning and management
+- **Multi-Environment Deployment**: Automated deployment to dev, staging, and production environments
+- **Blue-Green Deployment**: Zero-downtime deployment strategies with automatic rollback capabilities
+- **Security Scanning**: Container vulnerability scanning and dependency audit automation
+- **Performance Testing**: Automated load testing and performance validation in CI pipeline
+
 
 
