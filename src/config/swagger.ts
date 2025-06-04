@@ -7,6 +7,10 @@ import logger from '../utils/logger';
  * Production-ready Swagger configuration following OpenAPI 3.0.3 specification
  * Implements enterprise-grade API documentation standards
  */
+// Determine the correct paths based on environment
+const isProduction = process.env.NODE_ENV === 'production';
+const basePath = isProduction ? './dist' : './src';
+
 const swaggerOptions: swaggerJsdoc.Options = {
   definition: {
     openapi: '3.0.3',
@@ -696,7 +700,15 @@ Use the interactive examples below to test all endpoints. Each endpoint includes
       },
     ],
   },
-  apis: ['./src/routes/*.ts', './src/models/*.ts', './src/types/*.ts'],
+  // Use dynamic paths based on environment
+  apis: [
+    `${basePath}/routes/*.js`,
+    `${basePath}/routes/*.ts`,
+    `${basePath}/models/*.js`, 
+    `${basePath}/models/*.ts`,
+    `${basePath}/types/*.js`,
+    `${basePath}/types/*.ts`
+  ],
 };
 
 /**

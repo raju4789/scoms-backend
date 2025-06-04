@@ -11,7 +11,7 @@
     "dev:watch": "NODE_ENV=development npx ts-node-dev --respawn --transpile-only src/index.ts",
     "// Production": "====================================",
     "build": "tsc",
-    "docker:prod": "docker-compose up -d",
+    "docker:prod": "docker-compose up -d --build --force-recreate",
     "docker:down": "docker-compose down",
     "start": "node dist/index.js",
     "// Utility": "====================================",

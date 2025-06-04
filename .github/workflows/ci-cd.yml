@@ -1,0 +1,135 @@
+# CI/CD Pipeline for SCOMS Backend
+# This workflow runs automated tests, code quality checks, and Docker builds
+name: CI/CD Pipeline
+
+# Trigger conditions for the workflow
+on:
+  # Run on push to main branches
+  push:
+    branches: [ master, main, develop ]
+  # Run on pull requests targeting main branches
+  pull_request:
+    branches: [ master, main ]
+
+jobs:
+  # First job: Run tests and quality checks
+  test:
+    name: Test & Quality Checks
+    runs-on: ubuntu-latest
+
+    # Service containers needed for testing
+    services:
+      # PostgreSQL database for integration tests
+      postgres:
+        image: postgres:15
+        env:
+          POSTGRES_USER: postgres
+          POSTGRES_PASSWORD: postgres
+          POSTGRES_DB: scoms_test
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+        ports:
+          - 5432:5432
+
+      # Consul service for configuration management testing
+      consul:
+        image: consul:1.15
+        ports:
+          - 8500:8500
+
+    steps:
+      # Step 1: Get the source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Node.js environment with caching
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '18'
+          cache: 'npm'  # Cache npm dependencies for faster builds
+
+      # Step 3: Install dependencies (npm ci for faster, reliable installs)
+      - name: Install dependencies
+        run: npm ci
+
+      # Step 4: Run ESLint to check code style and potential issues
+      - name: Lint check
+        run: npm run lint:check
+
+      # Step 5: Check code formatting with Prettier
+      - name: Format check
+        run: npm run format:check
+
+      # Step 6: Compile TypeScript to ensure no compilation errors
+      - name: TypeScript build
+        run: npm run build
+
+      # Step 7: Run unit and integration tests with coverage
+      - name: Run tests
+        run: npm run test:coverage
+        env:
+          # Test environment variables
+          NODE_ENV: test
+          DB_HOST: localhost
+          DB_PORT: 5432
+          DB_USERNAME: postgres
+          DB_PASSWORD: postgres
+          DB_NAME: scoms_test
+          CONSUL_HOST: localhost
+          CONSUL_PORT: 8500
+
+      # Step 8: Upload test coverage reports to Codecov (optional)
+      - name: Upload coverage reports
+        uses: codecov/codecov-action@v3
+        with:
+          file: ./coverage/lcov.info
+          flags: unittests
+          name: codecov-umbrella
+          fail_ci_if_error: false  # Don't fail CI if codecov upload fails
+
+  # Second job: Build and test Docker image (runs only if tests pass)
+  docker-build:
+    name: Docker Build Test
+    runs-on: ubuntu-latest
+    needs: test  # This job depends on the 'test' job completing successfully
+
+    steps:
+      # Step 1: Get the source code
+      - name: Checkout code
+        uses: actions/checkout@v4
+
+      # Step 2: Setup Docker Buildx for advanced build features
+      - name: Set up Docker Buildx
+        uses: docker/setup-buildx-action@v3
+
+      # Step 3: Build Docker image without pushing to registry
+      - name: Build Docker image
+        uses: docker/build-push-action@v5
+        with:
+          context: .              # Build context is current directory
+          push: false             # Don't push to registry (just build and test)
+          tags: scoms-backend:test # Tag for local testing
+          cache-from: type=gha    # Use GitHub Actions cache for faster builds
+          cache-to: type=gha,mode=max
+
+      # Step 4: Test the built Docker image by running it
+      - name: Test Docker image
+        run: |
+          # Start container in detached mode
+          docker run --rm -d --name scoms-test \
+            -e NODE_ENV=test \
+            -p 3000:3000 \
+            scoms-backend:test
+          
+          # Wait for container to start up
+          sleep 10
+          
+          # Verify container is running
+          docker ps | grep scoms-test
+          
+          # Clean up: stop the test container
+          docker stop scoms-test

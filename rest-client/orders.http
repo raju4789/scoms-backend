@@ -64,8 +64,8 @@ Authorization: Bearer {{frontendKey}}
 Content-Type: application/json
 
 {
-  "quantity": 300,
-  "shipping_latitude": 10,
+  "quantity": 350,
+  "shipping_latitude": 0,
   "shipping_longitude": 20
 }
 
