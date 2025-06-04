@@ -95,7 +95,7 @@ services:
     volumes:
       - grafana_data_dev:/var/lib/grafana
       - ./observability/grafana/provisioning:/etc/grafana/provisioning
-      - ./observability/grafana/dashboards:/etc/grafana/dashboards
+      - ./observability/grafana/dashboards:/var/lib/grafana/dashboards
     networks:
       - scoms-dev-net
 

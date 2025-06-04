@@ -91,17 +91,6 @@ Content-Type: application/json
   "shipping_longitude": 151.2093
 }
 
-### Verify order - zero shipping fee for orders already at warehouses
-POST {{baseUrl}}/orders/verify
-Authorization: Bearer {{frontendKey}}
-Content-Type: application/json
-
-{
-  "quantity": 5,
-  "shipping_latitude": 51.5074,
-  "shipping_longitude": -0.1278
-}
-
 ### Submit order (explicit endpoint - requires orders:write permission)
 POST {{baseUrl}}/orders/submit
 Authorization: Bearer {{frontendKey}}
