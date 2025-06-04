@@ -163,6 +163,10 @@ SCOMS follows clean architecture principles with clear separation of concerns:
   - Zero-downtime updates for pricing rules, discount rates, and business logic
   - Live environment switching and feature flag management
   - Automatic configuration validation and rollback on errors
+    
+ <img width="1643" alt="Screenshot 2568-06-04 at 11 49 49" src="https://github.com/user-attachments/assets/21e12289-2a55-430e-84f4-fb2563655ed1" />
+
+  
 
 **Monitoring & Observability:**
 - **Prometheus** - Metrics collection and alerting
