@@ -233,7 +233,8 @@ SCOMS provides comprehensive interactive API documentation powered by Swagger/Op
 - **Response Examples**: Complete request/response examples for all endpoints
 - **Download Specification**: Export OpenAPI 3.0 specification in JSON/YAML format
 
-*Add your Swagger UI screenshots here*
+
+<img width="1726" alt="Screenshot 2568-06-04 at 10 22 10" src="https://github.com/user-attachments/assets/0464d657-f67a-4a1f-aae1-3310b0e3ce02" />
 
 ---
 
@@ -354,8 +355,13 @@ SCOMS includes a comprehensive monitoring stack with Grafana dashboards providin
 - **Performance Alerts**: Response time degradation, error rate spikes
 - **Business Alerts**: Inventory thresholds, order volume anomalies
 - **System Alerts**: Resource exhaustion, service unavailability
+- 
+<img width="1728" alt="Screenshot 2568-06-04 at 10 24 03" src="https://github.com/user-attachments/assets/b42741af-a2a8-45a5-9269-1cdcdcd982ed" />
 
-*Add your Grafana dashboard screenshots here*
+
+
+<img width="1728" alt="Screenshot 2568-06-04 at 11 47 38" src="https://github.com/user-attachments/assets/d989343a-9973-40cf-8a27-3408f7dd29fc" />
+
 
 ---
 
