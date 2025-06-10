@@ -4,6 +4,8 @@ import { v4 as uuidv4 } from 'uuid';
 declare global {
   // eslint-disable-next-line @typescript-eslint/no-namespace
   namespace Express {
+
+    // Extend the Request interface to include correlationId
     interface Request {
       correlationId: string;
     }

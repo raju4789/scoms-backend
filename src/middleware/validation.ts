@@ -94,10 +94,10 @@ export function sanitizeRequest(req: Request, res: Response, next: NextFunction)
     }
 
     // Handle circular references
-    if (seen.has(obj as object)) {
+    if (seen.has(obj)) {
       return {};
     }
-    seen.add(obj as object);
+    seen.add(obj);
 
     if (Array.isArray(obj)) {
       return obj.map(item => sanitizeObject(item, seen));

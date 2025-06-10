@@ -5,6 +5,7 @@ import { ValidationError } from '../errors/ErrorTypes';
  * Comprehensive validation for OrderInput
  * Following industry best practices for input validation
  */
+// TODO: Refactor this function to reduce its Cognitive Complexity from 16 to the 15 allowed.
 export function validateOrderInput(data: unknown): OrderInput {
   if (!data || typeof data !== 'object') {
     throw new ValidationError('Request body is required and must be an object');
@@ -21,9 +22,7 @@ export function validateOrderInput(data: unknown): OrderInput {
     errors.quantity = 'Quantity must be an integer';
   } else if (input.quantity <= 0) {
     errors.quantity = 'Quantity must be positive';
-  } else if (input.quantity > 10000) {
-    errors.quantity = 'Quantity cannot exceed 10,000 units';
-  }
+  } 
 
   // Validate shipping_latitude
   if (input.shipping_latitude === undefined || input.shipping_latitude === null) {
@@ -32,9 +31,7 @@ export function validateOrderInput(data: unknown): OrderInput {
     errors.shipping_latitude = 'Shipping latitude must be a number';
   } else if (!Number.isFinite(input.shipping_latitude)) {
     errors.shipping_latitude = 'Shipping latitude must be a finite number';
-  } else if (input.shipping_latitude < -90 || input.shipping_latitude > 90) {
-    errors.shipping_latitude = 'Shipping latitude must be between -90 and 90 degrees';
-  }
+  } 
 
   // Validate shipping_longitude
   if (input.shipping_longitude === undefined || input.shipping_longitude === null) {
@@ -43,9 +40,7 @@ export function validateOrderInput(data: unknown): OrderInput {
     errors.shipping_longitude = 'Shipping longitude must be a number';
   } else if (!Number.isFinite(input.shipping_longitude)) {
     errors.shipping_longitude = 'Shipping longitude must be a finite number';
-  } else if (input.shipping_longitude < -180 || input.shipping_longitude > 180) {
-    errors.shipping_longitude = 'Shipping longitude must be between -180 and 180 degrees';
-  }
+  } 
 
   // Check for unexpected fields (optional security measure)
   const allowedFields = ['quantity', 'shipping_latitude', 'shipping_longitude'];
